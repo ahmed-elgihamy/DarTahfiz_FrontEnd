@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الحلقات — دار التحفيظ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .gc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .gc {
+      background: #fff;
+      border: 1px solid var(--border2);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--t), box-shadow var(--t);
+    }
+
+    .gc:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .gc-stripe {
+      height: 5px;
+    }
+
+    .gc-body {
+      padding: 16px 18px;
+    }
+
+    .gc-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border2);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .gcs {
+      background: #fff;
+      padding: 9px 4px;
+      text-align: center;
+    }
+
+    .gcs-val {
+      font-size: .92rem;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .gcs-lbl {
+      font-size: .62rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .gc-foot {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+    }
+
+    .color-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .csw {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform var(--t);
+      border: 3px solid transparent;
+    }
+
+    .csw:hover {
+      transform: scale(1.15);
+    }
+
+    .csw.sel {
+      border-color: var(--ink);
+      transform: scale(1.15);
+      box-shadow: 0 0 0 3px rgba(14, 24, 32, .15);
+    }
+
+    .prayer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .po {
+      border: 1.5px solid var(--border2);
+      border-radius: var(--r-sm);
+      padding: 11px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--t);
+      background: var(--surface);
+    }
+
+    .po:hover,
+    .po.sel {
+      border-color: var(--green);
+      background: var(--green-pale);
+    }
+
+    .po i {
+      font-size: .95rem;
+      margin-bottom: 4px;
+      display: block;
+      color: var(--muted);
+    }
+
+    .po.sel i {
+      color: var(--green);
+    }
+
+    .po-n {
+      font-size: .73rem;
+      font-weight: 700;
+      color: var(--ink2);
+    }
+
+    .days-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .day {
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border2);
+      font-size: .76rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--muted);
+      transition: all var(--t);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .day.sel {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+
+    .stepper {
+      display: flex;
+      margin-bottom: 22px;
+    }
+
+    .si {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      position: relative;
+    }
+
+    .si:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: calc(-50%);
+      right: calc(50%);
+      height: 2px;
+      background: var(--border2);
+      z-index: 0;
+    }
+
+    .si.done::after,
+    .si.active::after {
+      background: var(--green);
+    }
+
+    .sd {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      font-weight: 700;
+      background: var(--surface2);
+      border: 2px solid var(--border2);
+      color: var(--muted);
+      position: relative;
+      z-index: 1;
+      transition: all .2s;
+    }
+
+    .si.active .sd {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+      box-shadow: 0 0 0 4px var(--green-glow);
+    }
+
+    .si.done .sd {
+      background: var(--green-pale);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .sl {
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .si.active .sl,
+    .si.done .sl {
+      color: var(--green);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-bar"></div>
+  <div class="shell">
+    <div id="sidebar-wrap"></div>
+    <main class="main-content">
+      <div id="topbar-wrap"></div>
+      <div class="page-content">
+
+        <div class="page-header fade-up">
+          <div class="page-header-left">
+            <h1><i class="fa-solid fa-layer-group"></i> الحلقات</h1>
+            <p>إدارة الحلقات القرآنية وحلقات التجويد</p>
+          </div>
+          <button class="btn btn-primary admin-only" onclick="openWiz()">
+            <i class="fa-solid fa-plus"></i> حلقة جديدة
+          </button>
+        </div>
+
+        <div class="gc-grid fade-up" id="gc-grid">
+          <div class="skeleton" style="height:250px;border-radius:var(--r-lg)"></div>
+          <div class="skeleton" style="height:250px;border-radius:var(--r-lg)"></div>
+          <div class="skeleton" style="height:250px;border-radius:var(--r-lg)"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- DRAWER -->
+  <div class="drawer-overlay" id="group-overlay" onclick="Drawer.close('group')"></div>
+  <div class="drawer" id="group-drawer" style="width:500px;max-width:95vw">
+    <div class="drawer-head">
+      <h2 id="dr-title"><i class="fa-solid fa-plus"></i> إنشاء حلقة جديدة</h2>
+      <button class="drawer-close" onclick="Drawer.close('group')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div class="stepper" id="stepper">
+        <div class="si active" id="si1">
+          <div class="sd" id="sd1">1</div>
+          <div class="sl">المعلومات</div>
+        </div>
+        <div class="si" id="si2">
+          <div class="sd" id="sd2">2</div>
+          <div class="sl">الوقت</div>
+        </div>
+        <div class="si" id="si3">
+          <div class="sd" id="sd3">3</div>
+          <div class="sl">المعلم</div>
+        </div>
+      </div>
+      <!-- Step 1 -->
+      <div id="s1">
+        <div class="form-group"><label>اسم الحلقة <span class="req">*</span></label><input class="form-control" id="f-n"
+            placeholder="حلقة الفجر"></div>
+        <div class="form-row">
+          <div class="form-group"><label>النوع</label>
+            <select class="form-control" id="f-t">
+              <option value="Quran">تحفيظ قرآن</option>
+              <option value="Tajweed">تجويد</option>
+              <option value="Other">أخرى</option>
+            </select>
+          </div>
+          <div class="form-group"><label>الرسوم (جنيه/شهر)</label><input class="form-control" type="number" id="f-fee"
+              value="200"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>الحد الأقصى</label><input class="form-control" type="number" id="f-max"
+              value="15"></div>
+          <div class="form-group"><label>الوصف</label><input class="form-control" id="f-desc"></div>
+        </div>
+        <div class="form-group">
+          <label>لون الحلقة</label>
+          <div class="color-row">
+            <div class="csw sel" data-c="#1a6b3a" style="background:#1a6b3a" onclick="pickC(this)"></div>
+            <div class="csw" data-c="#b5820a" style="background:#b5820a" onclick="pickC(this)"></div>
+            <div class="csw" data-c="#1a6fa8" style="background:#1a6fa8" onclick="pickC(this)"></div>
+            <div class="csw" data-c="#6e3db5" style="background:#6e3db5" onclick="pickC(this)"></div>
+            <div class="csw" data-c="#be3a2b" style="background:#be3a2b" onclick="pickC(this)"></div>
+            <div class="csw" data-c="#1a7a6e" style="background:#1a7a6e" onclick="pickC(this)"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Step 2 -->
+      <div id="s2" style="display:none">
+        <div class="form-group">
+          <label>وقت الحلقة</label>
+          <div class="prayer-grid">
+            <div class="po sel" data-p="Fajr" onclick="pickP(this)"><i class="fa-solid fa-sun"></i>
+              <div class="po-n">الفجر</div>
+            </div>
+            <div class="po" data-p="Duha" onclick="pickP(this)"><i class="fa-solid fa-cloud-sun"></i>
+              <div class="po-n">الضحى</div>
+            </div>
+            <div class="po" data-p="Dhuhr" onclick="pickP(this)"><i class="fa-solid fa-sun"></i>
+              <div class="po-n">الظهر</div>
+            </div>
+            <div class="po" data-p="Asr" onclick="pickP(this)"><i class="fa-solid fa-cloud"></i>
+              <div class="po-n">العصر</div>
+            </div>
+            <div class="po" data-p="Maghrib" onclick="pickP(this)"><i class="fa-solid fa-cloud-sun"></i>
+              <div class="po-n">المغرب</div>
+            </div>
+            <div class="po" data-p="Isha" onclick="pickP(this)"><i class="fa-solid fa-moon"></i>
+              <div class="po-n">العشاء</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>أيام الأسبوع</label>
+          <div class="days-row">
+            <div class="day sel" onclick="togD(this)">السبت</div>
+            <div class="day sel" onclick="togD(this)">الأحد</div>
+            <div class="day sel" onclick="togD(this)">الاثنين</div>
+            <div class="day sel" onclick="togD(this)">الثلاثاء</div>
+            <div class="day sel" onclick="togD(this)">الأربعاء</div>
+            <div class="day" onclick="togD(this)">الخميس</div>
+            <div class="day" onclick="togD(this)">الجمعة</div>
+          </div>
+        </div>
+        <div class="form-group"><label>مدة الحلقة</label>
+          <select class="form-control" id="f-dur">
+            <option value="30">30 دقيقة</option>
+            <option value="45">45 دقيقة</option>
+            <option value="60" selected>ساعة</option>
+            <option value="90">ساعة ونصف</option>
+          </select>
+        </div>
+      </div>
+      <!-- Step 3 -->
+      <div id="s3" style="display:none">
+        <div class="form-group"><label>المعلم <span class="req">*</span></label>
+          <select class="form-control" id="f-tch">
+            <option value="">— اختر —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-ghost" id="btn-prev" onclick="prev()" style="display:none">
+        <i class="fa-solid fa-arrow-right"></i> رجوع
+      </button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" onclick="Drawer.close('group')">
+        <i class="fa-solid fa-xmark"></i> إلغاء
+      </button>
+      <button class="btn btn-primary" id="btn-next" onclick="next()">
+        التالي <i class="fa-solid fa-arrow-left"></i>
+      </button>
+    </div>
+  </div>
+
+  <div id="confirm-wrap"></div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    initPage();
+    renderLayout('groups');
+
+    var groups = [];
+    var teachers = [];
+    var editId = null;
+    var step = 1;
+    var selC = '#1a6b3a';
+    var selP = 'Fajr';
+    var selDays = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء'];
+
+    var PI = {
+      Fajr: 'fa-sun', Duha: 'fa-cloud-sun', Dhuhr: 'fa-sun',
+      Asr: 'fa-cloud', Maghrib: 'fa-cloud-sun', Isha: 'fa-moon'
+    };
+
+    // ── Load ─────────────────────────────────────────────────
+    async function load() {
+      Loading.show();
+      var gR = await API.groups.getAll();
+      var tR = Auth.isAdmin ? await API.teachers.getAll() : null;
+      Loading.hide();
+
+      if (tR && tR.success) {
+        teachers = tR.data;
+        var sel = document.getElementById('f-tch');
+        if (sel) {
+          sel.innerHTML = '<option value="">— اختر —</option>';
+          teachers.forEach(function (t) {
+            sel.innerHTML += '<option value="' + t.id + '">' + t.displayName + '</option>';
+          });
+        }
+      }
+
+      if (gR && gR.success) {
+        if (Auth.isAdmin) {
+          groups = gR.data;
+        } else {
+          // المعلم يشوف حلقاته بس
+          var myTid = Auth.teacherId;
+          groups = gR.data.filter(function (g) {
+            return (g.teacherId || g.TeacherId || '') === myTid;
+          });
+        }
+        render();
+      }
+    }
+
+    // ── Render ────────────────────────────────────────────────
+    function render() {
+      var grid = document.getElementById('gc-grid');
+      var isAdmin = Auth.isAdmin;
+
+      if (!groups.length) {
+        grid.innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1">' +
+          '<i class="fa-solid fa-layer-group"></i>' +
+          '<h3>لا توجد حلقات</h3>' +
+          '<p>' + (isAdmin ? 'اضغط "حلقة جديدة" للبدء' : 'لا توجد حلقات مسندة إليك') + '</p>' +
+          '</div>';
+        return;
+      }
+
+      var html = groups.map(function (g, i) {
+        var pct = g.maxStudents > 0 ? Math.round(g.studentCount / g.maxStudents * 100) : 0;
+        var prayerIco = PI[g.prayer] || 'fa-mosque';
+        var typeLabel = g.type === 'Tajweed' ? 'تجويد' : 'تحفيظ';
+
+        // Admin buttons only
+        var adminBtns = isAdmin
+          ? '<div style="display:flex;gap:5px">' +
+          '<button class="btn btn-outline btn-icon btn-sm" onclick="editG(\'' + g.id + '\')" title="تعديل">' +
+          '<i class="fa-solid fa-pen"></i>' +
+          '</button>' +
+          '<button class="btn btn-outline btn-icon btn-sm" style="color:var(--red)" onclick="delG(\'' + g.id + '\',\'' + g.name.replace(/'/g, '') + '\')" title="حذف">' +
+          '<i class="fa-solid fa-trash"></i>' +
+          '</button>' +
+          '</div>'
+          : '';
+
+        return (
+          '<div class="gc fade-up" style="animation-delay:' + (i * 0.04) + 's">' +
+          '<div class="gc-stripe" style="background:' + g.color + '"></div>' +
+          '<div class="gc-body">' +
+          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">' +
+          '<div style="width:38px;height:38px;border-radius:10px;background:' + g.color + '22;color:' + g.color + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+          '<i class="fa-solid ' + prayerIco + '"></i>' +
+          '</div>' +
+          '<div>' +
+          '<div style="font-weight:800;font-size:.95rem">' + g.name + '</div>' +
+          '<div style="font-size:.7rem;color:var(--muted)">' + g.teacherName + ' · ' + typeLabel + '</div>' +
+          '</div>' +
+          '</div>' +
+          '<div class="gc-stats">' +
+          '<div class="gcs"><div class="gcs-val">' + g.studentCount + '</div><div class="gcs-lbl">طالب</div></div>' +
+          '<div class="gcs"><div class="gcs-val">' + g.maxStudents + '</div><div class="gcs-lbl">الحد</div></div>' +
+          '<div class="gcs"><div class="gcs-val">' + g.monthlyFee + '</div><div class="gcs-lbl">جنيه</div></div>' +
+          '</div>' +
+          '<div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:4px">' +
+          '<span>الامتلاء</span><span>' + pct + '%</span>' +
+          '</div>' +
+          '<div class="progress-bar" style="width:100%;height:6px">' +
+          '<div class="progress-fill" style="width:' + pct + '%;background:' + g.color + '"></div>' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+          '<div class="gc-foot">' +
+          '<div style="font-size:.7rem;color:var(--muted)">' +
+          '<i class="fa-solid fa-clock"></i> ' + g.prayer + ' · ' + g.durationMinutes + ' دقيقة' +
+          '</div>' +
+          adminBtns +
+          '</div>' +
+          '</div>'
+        );
+      });
+
+      grid.innerHTML = html.join('');
+    }
+
+    // ── Wizard ────────────────────────────────────────────────
+    function openWiz() {
+      editId = null; step = 1;
+      selC = '#1a6b3a'; selP = 'Fajr';
+      selDays = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء'];
+      document.getElementById('dr-title').innerHTML = '<i class="fa-solid fa-plus"></i> إنشاء حلقة جديدة';
+      document.getElementById('f-n').value = '';
+      document.getElementById('f-fee').value = 200;
+      document.getElementById('f-max').value = 15;
+      document.getElementById('f-desc').value = '';
+      document.querySelectorAll('.csw').forEach(function (s, i) { s.classList.toggle('sel', i === 0); });
+      document.querySelectorAll('.po').forEach(function (p, i) { p.classList.toggle('sel', i === 0); });
+      document.querySelectorAll('.day').forEach(function (d) { d.classList.toggle('sel', selDays.indexOf(d.textContent) !== -1); });
+      showStep(1);
+      Drawer.open('group');
+    }
+
+    function showStep(s) {
+      step = s;
+      for (var i = 1; i <= 3; i++) {
+        document.getElementById('s' + i).style.display = (i === s) ? '' : 'none';
+        var si = document.getElementById('si' + i);
+        var sd = document.getElementById('sd' + i);
+        si.className = 'si ' + (i < s ? 'done' : i === s ? 'active' : '');
+        sd.innerHTML = i < s ? '<i class="fa-solid fa-check"></i>' : i;
+      }
+      document.getElementById('btn-prev').style.display = s > 1 ? '' : 'none';
+      var nb = document.getElementById('btn-next');
+      nb.innerHTML = s === 3
+        ? '<i class="fa-solid fa-floppy-disk"></i> حفظ'
+        : 'التالي <i class="fa-solid fa-arrow-left"></i>';
+    }
+
+    function prev() { if (step > 1) showStep(step - 1); }
+
+    async function next() {
+      if (step === 1) {
+        if (!document.getElementById('f-n').value.trim()) { Toast.error('أدخل اسم الحلقة'); return; }
+        showStep(2);
+      } else if (step === 2) {
+        if (!selDays.length) { Toast.error('اختر يوم على الأقل'); return; }
+        showStep(3);
+      } else {
+        await saveG();
+      }
+    }
+
+    async function saveG() {
+      var tid = document.getElementById('f-tch').value;
+      if (!tid) { Toast.error('اختر المعلم'); return; }
+
+      var btn = document.getElementById('btn-next');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      var body = {
+        name: document.getElementById('f-n').value.trim(),
+        color: selC,
+        type: document.getElementById('f-t').value,
+        prayer: selP,
+        days: JSON.stringify(selDays),
+        durationMinutes: parseInt(document.getElementById('f-dur').value),
+        maxStudents: parseInt(document.getElementById('f-max').value),
+        monthlyFee: parseFloat(document.getElementById('f-fee').value),
+        description: document.getElementById('f-desc').value,
+        teacherId: tid,
+        isActive: true,
+      };
+
+      var res = editId ? await API.groups.update(editId, body) : await API.groups.create(body);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ';
+
+      if (res && res.success) {
+        Toast.success('تم ' + (editId ? 'تعديل' : 'إنشاء') + ' ' + body.name);
+        Drawer.close('group');
+        load();
+      } else {
+        Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+
+    function editG(id) {
+      editId = id;
+      var g = null;
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].id === id) { g = groups[i]; break; }
+      }
+      if (!g) return;
+
+      document.getElementById('dr-title').innerHTML = '<i class="fa-solid fa-pen"></i> تعديل الحلقة';
+      document.getElementById('f-n').value = g.name;
+      document.getElementById('f-t').value = g.type;
+      document.getElementById('f-fee').value = g.monthlyFee;
+      document.getElementById('f-max').value = g.maxStudents;
+      document.getElementById('f-desc').value = g.description || '';
+      document.getElementById('f-tch').value = g.teacherId;
+
+      selC = g.color; selP = g.prayer;
+      try { selDays = JSON.parse(g.days); } catch (e) { selDays = []; }
+
+      document.querySelectorAll('.csw').forEach(function (s) { s.classList.toggle('sel', s.dataset.c === selC); });
+      document.querySelectorAll('.po').forEach(function (p) { p.classList.toggle('sel', p.dataset.p === selP); });
+      document.querySelectorAll('.day').forEach(function (d) { d.classList.toggle('sel', selDays.indexOf(d.textContent) !== -1); });
+
+      showStep(3);
+      document.getElementById('btn-next').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ';
+      Drawer.open('group');
+    }
+
+    function delG(id, name) {
+      Confirm.show(
+        'حذف ' + name,
+        'هل أنت متأكد من حذف "' + name + '"؟',
+        async function () {
+          var res = await API.groups.delete(id);
+          if (res && res.success) { Toast.success('تم حذف ' + name); load(); }
+          else Toast.error('حدث خطأ');
+        }
+      );
+    }
+
+    function pickC(el) {
+      document.querySelectorAll('.csw').forEach(function (s) { s.classList.remove('sel'); });
+      el.classList.add('sel'); selC = el.dataset.c;
+    }
+    function pickP(el) {
+      document.querySelectorAll('.po').forEach(function (p) { p.classList.remove('sel'); });
+      el.classList.add('sel'); selP = el.dataset.p;
+    }
+    function togD(el) {
+      el.classList.toggle('sel');
+      selDays = [];
+      document.querySelectorAll('.day.sel').forEach(function (d) { selDays.push(d.textContent); });
+    }
+
+    load();
+  </script>
+</body>
+
+</html>

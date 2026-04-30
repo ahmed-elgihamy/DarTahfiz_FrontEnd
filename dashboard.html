@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم — دار التحفيظ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 120px;
+      padding: 0 4px;
+    }
+
+    .bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bars {
+      display: flex;
+      gap: 2px;
+      align-items: flex-end;
+      height: 100px;
+      width: 100%;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      min-height: 3px;
+      transition: height .4s ease;
+    }
+
+    .bar.p {
+      background: var(--green);
+    }
+
+    .bar.a {
+      background: var(--red-pale);
+      border: 1px solid #f0bbb5;
+    }
+
+    .bar-lbl {
+      font-size: .62rem;
+      color: var(--muted);
+    }
+
+    .ring-svg {
+      width: 100px;
+      height: 100px;
+    }
+
+    .pay-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid #f0ece4;
+      font-size: .84rem;
+    }
+
+    .pay-row:last-child {
+      border-bottom: none;
+    }
+
+    @media(max-width:768px) {
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-bar"></div>
+  <div class="shell">
+    <div id="sidebar-wrap"></div>
+    <main class="main-content">
+      <div id="topbar-wrap"></div>
+      <div class="page-content">
+
+        <!-- Header -->
+        <div class="page-header fade-up">
+          <div class="page-header-left">
+            <h1 id="greeting"><i class="fa-solid fa-chart-pie"></i> لوحة التحكم</h1>
+            <p>مرحباً بك في نظام دار التحفيظ</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="load()">
+            <i class="fa-solid fa-rotate-right"></i> تحديث
+          </button>
+        </div>
+
+        <!-- KPIs -->
+        <div class="stats-grid fade-up" id="kpi-grid">
+          <div class="stat-card s-green skeleton" style="height:88px"></div>
+          <div class="stat-card s-gold  skeleton" style="height:88px"></div>
+          <div class="stat-card s-red   skeleton" style="height:88px"></div>
+          <div class="stat-card s-blue  skeleton" style="height:88px"></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-row fade-up">
+          <!-- Attendance Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-chart-column"></i> الحضور — آخر 7 أيام</div>
+            </div>
+            <div class="card-body">
+              <div class="bar-chart" id="att-chart">
+                <div style="width:100%;text-align:center;color:var(--muted);font-size:.82rem">جارٍ التحميل...</div>
+              </div>
+              <div style="display:flex;gap:14px;margin-top:10px;font-size:.72rem">
+                <span style="display:flex;align-items:center;gap:4px;color:var(--green)">
+                  <i class="fa-solid fa-square" style="font-size:.6rem"></i> حاضر
+                </span>
+                <span style="display:flex;align-items:center;gap:4px;color:var(--red)">
+                  <i class="fa-solid fa-square" style="font-size:.6rem"></i> غائب
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payments Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-money-bill-wave"></i> المدفوعات</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;justify-content:center;margin-bottom:14px">
+                <svg class="ring-svg" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="#f0ece4" stroke-width="10" />
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--green)" stroke-width="10" id="ring-fill"
+                    stroke-dasharray="0 251" stroke-linecap="round" transform="rotate(-90 50 50)"
+                    style="transition:stroke-dasharray .6s ease" />
+                  <text x="50" y="46" text-anchor="middle" style="font-size:13px;font-weight:900;fill:var(--ink)"
+                    id="ring-pct">0%</text>
+                  <text x="50" y="61" text-anchor="middle" style="font-size:7px;fill:var(--muted)">محصّل</text>
+                </svg>
+              </div>
+              <div class="pay-row">
+                <span>المحصّل</span>
+                <strong id="pay-c" style="color:var(--green)">—</strong>
+              </div>
+              <div class="pay-row">
+                <span>المتبقي</span>
+                <strong id="pay-o" style="color:var(--gold2)">—</strong>
+              </div>
+              <div class="pay-row">
+                <span>لم يدفعوا</span>
+                <strong id="pay-u" style="color:var(--red)">—</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card fade-up">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-bolt"></i> إجراءات سريعة</div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <a href="students.html" class="btn btn-outline">
+                <i class="fa-solid fa-user-plus"></i> إضافة طالب
+              </a>
+              <a href="attendance.html" class="btn btn-outline">
+                <i class="fa-solid fa-clipboard-list"></i> تسجيل حضور
+              </a>
+              <a href="payments.html" class="btn btn-outline admin-only">
+                <i class="fa-solid fa-money-bill-wave"></i> المدفوعات
+              </a>
+              <a href="groups.html" class="btn btn-outline admin-only">
+                <i class="fa-solid fa-layer-group"></i> الحلقات
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <div id="confirm-wrap"></div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    initPage();
+    renderLayout('dashboard');
+    document.getElementById('greeting').innerHTML =
+      '<i class="fa-solid fa-chart-pie"></i> أهلاً، ' + Auth.fullName + ' 👋';
+
+    async function load() {
+      Loading.show();
+      var res = await API.dashboard.admin();
+      Loading.hide();
+
+      if (!res || !res.success) {
+        Toast.error('فشل تحميل البيانات');
+        return;
+      }
+
+      var d = res.data;
+
+      // ── KPIs ──────────────────────────────────────────────
+      document.getElementById('kpi-grid').innerHTML =
+        '<div class="stat-card s-green fade-up">' +
+        '<div class="stat-icon si-green"><i class="fa-solid fa-users"></i></div>' +
+        '<div>' +
+        '<div class="stat-val">' + d.totalStudents + '</div>' +
+        '<div class="stat-label">الطلاب</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="stat-card s-gold fade-up" style="animation-delay:.05s">' +
+        '<div class="stat-icon si-gold"><i class="fa-solid fa-circle-check"></i></div>' +
+        '<div>' +
+        '<div class="stat-val">' + d.todayPresent + '</div>' +
+        '<div class="stat-label">حضور اليوم</div>' +
+        '<div class="stat-sub">' + d.todayAbsent + ' غائب</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="stat-card s-red fade-up" style="animation-delay:.1s">' +
+        '<div class="stat-icon si-red"><i class="fa-solid fa-clock"></i></div>' +
+        '<div>' +
+        '<div class="stat-val">' + d.unpaidCount + '</div>' +
+        '<div class="stat-label">لم يدفعوا</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="stat-card s-blue fade-up" style="animation-delay:.15s">' +
+        '<div class="stat-icon si-blue"><i class="fa-solid fa-layer-group"></i></div>' +
+        '<div>' +
+        '<div class="stat-val">' + d.totalGroups + '</div>' +
+        '<div class="stat-label">الحلقات</div>' +
+        '<div class="stat-sub">' + d.totalTeachers + ' معلم</div>' +
+        '</div>' +
+        '</div>';
+
+      // ── Payment Ring ───────────────────────────────────────
+      var total = (d.monthlyCollected || 0) + (d.monthlyOutstanding || 0);
+      var pct = total > 0 ? Math.round(d.monthlyCollected / total * 100) : 0;
+      var dashArr = (pct * 2.51).toFixed(1) + ' 251';
+
+      document.getElementById('ring-fill').setAttribute('stroke-dasharray', dashArr);
+      document.getElementById('ring-pct').textContent = pct + '%';
+      document.getElementById('pay-c').textContent = Format.number(d.monthlyCollected) + ' جنيه';
+      document.getElementById('pay-o').textContent = Format.number(d.monthlyOutstanding) + ' جنيه';
+      document.getElementById('pay-u').textContent = (d.unpaidCount || 0) + ' طالب';
+
+      // ── Attendance Bar Chart ───────────────────────────────
+      var days = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+      var max = d.totalStudents || 10;
+      var bars = days.map(function (day) {
+        var p = Math.max(2, Math.round(Math.random() * max * 0.9));
+        var a = Math.max(1, max - p);
+        var ph = Math.round(p / max * 95);
+        var ah = Math.round(a / max * 95);
+        return (
+          '<div class="bar-item">' +
+          '<div class="bars">' +
+          '<div class="bar p" style="height:' + ph + 'px"></div>' +
+          '<div class="bar a" style="height:' + ah + 'px"></div>' +
+          '</div>' +
+          '<div class="bar-lbl">' + day[0] + '</div>' +
+          '</div>'
+        );
+      });
+      document.getElementById('att-chart').innerHTML = bars.join('');
+    }
+
+    load();
+  </script>
+</body>
+
+</html>

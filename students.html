@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0e1820">
+  <title>الطلاب — دار التحفيظ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <div id="loading-bar"></div>
+  <div class="shell">
+    <div id="sidebar-wrap"></div>
+    <main class="main-content">
+      <div id="topbar-wrap"></div>
+      <div class="page-content">
+
+        <!-- Header -->
+        <div class="page-header fade-up">
+          <div class="page-header-left">
+            <h1><i class="fa-solid fa-user-graduate"></i> الطلاب</h1>
+            <p>إدارة جميع الطلاب المسجلين في دار التحفيظ</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-outline" onclick="exportStudents()">
+              <i class="fa-solid fa-file-excel"></i> تصدير Excel
+            </button>
+            <button class="btn btn-primary admin-only" onclick="openAdd()">
+              <i class="fa-solid fa-plus"></i> إضافة طالب
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid fade-up">
+          <div class="stat-card s-green">
+            <div class="stat-icon si-green"><i class="fa-solid fa-users"></i></div>
+            <div>
+              <div class="stat-val" id="st-total">—</div>
+              <div class="stat-label">إجمالي الطلاب</div>
+            </div>
+          </div>
+          <div class="stat-card s-green">
+            <div class="stat-icon si-green"><i class="fa-solid fa-circle-check"></i></div>
+            <div>
+              <div class="stat-val" id="st-paid">—</div>
+              <div class="stat-label">دفعوا الشهر</div>
+            </div>
+          </div>
+          <div class="stat-card s-gold">
+            <div class="stat-icon si-gold"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <div class="stat-val" id="st-unpaid">—</div>
+              <div class="stat-label">لم يدفعوا</div>
+            </div>
+          </div>
+          <div class="stat-card s-blue">
+            <div class="stat-icon si-blue"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+              <div class="stat-val" id="st-att">—</div>
+              <div class="stat-label">متوسط الحضور</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar fade-up" style="flex-direction:column;gap:8px">
+          <div class="search-box" style="width:100%">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search" placeholder="ابحث بالاسم أو الهاتف..." oninput="applyFilter()">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%">
+            <select class="filter-sel" id="f-group" onchange="applyFilter()" style="width:100%">
+              <option value="">كل الحلقات</option>
+            </select>
+            <select class="filter-sel" id="f-paid" onchange="applyFilter()" style="width:100%">
+              <option value="">كل الدفع</option>
+              <option value="true">دفع ✅</option>
+              <option value="false">لم يدفع ⏳</option>
+            </select>
+            <select class="filter-sel" id="f-sort" onchange="applyFilter()" style="width:100%">
+              <option value="name">الاسم</option>
+              <option value="att-desc">حضور ↑</option>
+              <option value="att-asc">حضور ↓</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card fade-up">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-table-list"></i> <span id="table-count">الطلاب</span></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline btn-sm" onclick="exportStudents()">
+                <i class="fa-solid fa-file-excel"></i> Excel
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="students-table">
+              <thead>
+                <tr>
+                  <th>الطالب</th>
+                  <th class="hide-mobile">الحلقات</th>
+                  <th>الحضور</th>
+                  <th>الدفع</th>
+                  <th class="admin-only">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody">
+                <tr>
+                  <td colspan="5" style="text-align:center;padding:40px">
+                    <div class="spinner spinner-green" style="margin:auto"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span id="pag-info" style="font-size:.78rem;color:var(--muted)"></span>
+            <div class="pag-btns" id="pag-btns"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ADD/EDIT DRAWER -->
+  <div class="drawer-overlay" id="student-overlay" onclick="Drawer.close('student')"></div>
+  <div class="drawer" id="student-drawer">
+    <div class="drawer-head">
+      <h2 id="drawer-title"><i class="fa-solid fa-user-plus"></i> إضافة طالب جديد</h2>
+      <button class="drawer-close" onclick="Drawer.close('student')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div class="section-divider"><i class="fa-solid fa-id-card"></i> البيانات الشخصية</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fa-solid fa-user"></i> الاسم الأول <span class="req">*</span></label>
+          <input class="form-control" id="f-fname" placeholder="أحمد">
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-user"></i> اسم الأب <span class="req">*</span></label>
+          <input class="form-control" id="f-lname" placeholder="محمد">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fa-solid fa-calendar"></i> العمر</label>
+          <input class="form-control" type="number" id="f-age" placeholder="12" min="5" max="25">
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-venus-mars"></i> الجنس</label>
+          <select class="form-control" id="f-gender">
+            <option value="Male">ذكر</option>
+            <option value="Female">أنثى</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-divider"><i class="fa-solid fa-address-book"></i> بيانات التواصل</div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-phone"></i> هاتف ولي الأمر <span class="req">*</span></label>
+        <input class="form-control" id="f-phone" placeholder="01xxxxxxxxx" inputmode="tel">
+      </div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-location-dot"></i> العنوان</label>
+        <input class="form-control" id="f-address" placeholder="المدينة، الحي...">
+      </div>
+
+      <div class="section-divider"><i class="fa-solid fa-mosque"></i> بيانات التسجيل</div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-layer-group"></i> الحلقات <span class="req">*</span></label>
+        <div id="group-checkboxes" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
+      </div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-note-sticky"></i> ملاحظات</label>
+        <textarea class="form-control" id="f-notes" rows="3" placeholder="أي ملاحظات عن الطالب..."></textarea>
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-ghost" onclick="Drawer.close('student')">
+        <i class="fa-solid fa-xmark"></i> إلغاء
+      </button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveStudent()">
+        <i class="fa-solid fa-floppy-disk"></i> حفظ الطالب
+      </button>
+    </div>
+  </div>
+
+  <div id="confirm-wrap"></div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    initPage();
+    renderLayout('students');
+
+    let allStudents = [], filtered = [], allGroups = [], editingId = null;
+    const PAGE_SIZE = 10;
+    let page = 1;
+
+    async function loadData() {
+      Loading.show();
+      const [sRes, gRes] = await Promise.all([API.students.getAll(), API.groups.getAll()]);
+      Loading.hide();
+
+      if (gRes?.success) {
+        allGroups = gRes.data;
+        const sel = document.getElementById('f-group');
+        allGroups.forEach(g => sel.innerHTML += `<option value="${g.id}">${g.name}</option>`);
+        document.getElementById('group-checkboxes').innerHTML = allGroups.map(function (g) {
+          return '<label style="display:flex;align-items:center;gap:10px;padding:12px 14px;' +
+            'background:var(--surface);border-radius:var(--r-sm);cursor:pointer;' +
+            'border:1.5px solid var(--border2);transition:all .2s" ' +
+            'for="grp-' + g.id + '">' +
+            '<input type="checkbox" id="grp-' + g.id + '" class="grp-cb" value="' + g.id + '" ' +
+            'style="width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0" ' +
+            'onchange="highlightGroup(this)">' +
+            '<div>' +
+            '<div style="font-weight:700;font-size:.87rem">' + g.name + '</div>' +
+            '<div style="font-size:.7rem;color:var(--muted)">' + (g.type === 'Tajweed' ? 'تجويد' : 'تحفيظ') + ' · ' + g.monthlyFee + ' جنيه/شهر</div>' +
+            '</div>' +
+            '</label>';
+        }).join('');
+      }
+
+      if (sRes?.success) {
+        allStudents = sRes.data;
+        updateStats();
+        applyFilter();
+      }
+    }
+    function highlightGroup(checkbox) {
+      var label = checkbox.closest('label');
+      if (checkbox.checked) {
+        label.style.borderColor = 'var(--green)';
+        label.style.background = 'var(--green-pale)';
+      } else {
+        label.style.borderColor = 'var(--border2)';
+        label.style.background = 'var(--surface)';
+      }
+    }
+    function updateStats() {
+      document.getElementById('st-total').textContent = allStudents.length;
+      document.getElementById('st-paid').textContent = allStudents.filter(s => s.currentMonthPaid).length;
+      document.getElementById('st-unpaid').textContent = allStudents.filter(s => !s.currentMonthPaid).length;
+      const avg = allStudents.length
+        ? Math.round(allStudents.reduce((a, s) => a + s.attendancePercent, 0) / allStudents.length) : 0;
+      document.getElementById('st-att').textContent = avg + '%';
+    }
+
+    function applyFilter() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const grp = document.getElementById('f-group').value;
+      const pay = document.getElementById('f-paid').value;
+      const srt = document.getElementById('f-sort').value;
+
+      filtered = allStudents.filter(s => {
+        if (q && !s.fullName.toLowerCase().includes(q) && !s.phone.includes(q)) return false;
+        if (grp && !s.groups?.some(g => g.id === grp)) return false;
+        if (pay === 'true' && !s.currentMonthPaid) return false;
+        if (pay === 'false' && s.currentMonthPaid) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        if (srt === 'att-desc') return b.attendancePercent - a.attendancePercent;
+        if (srt === 'att-asc') return a.attendancePercent - b.attendancePercent;
+        return a.fullName.localeCompare(b.fullName);
+      });
+
+      page = 1; render();
+    }
+
+    function render() {
+      const start = (page - 1) * PAGE_SIZE;
+      const paged = filtered.slice(start, start + PAGE_SIZE);
+      const tbody = document.getElementById('students-tbody');
+
+      document.getElementById('table-count').textContent =
+        `${filtered.length} طالب${filtered.length !== allStudents.length ? ' (من ' + allStudents.length + ')' : ''}`;
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="5">
+        <div class="empty-state">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <h3>لا توجد نتائج</h3>
+          <p>جرب تغيير كلمة البحث أو الفلاتر</p>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('search').value='';applyFilter()">
+            <i class="fa-solid fa-rotate-right"></i> إعادة ضبط
+          </button>
+        </div>
+      </td></tr>`;
+        document.getElementById('pag-info').textContent = '';
+        document.getElementById('pag-btns').innerHTML = '';
+        return;
+      }
+
+      tbody.innerHTML = paged.map((s, i) => {
+        const color = s.groups?.[0]?.color || 'var(--green)';
+        return `
+      <tr class="fade-up" style="animation-delay:${i * .03}s">
+        <td>
+          <div style="display:flex;align-items:center;gap:11px">
+            <div class="av av-green" style="background:${color}22;color:${color};border:1.5px solid ${color}44">
+              ${Format.initials(s.fullName)}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:.88rem">${s.fullName}</div>
+              <div style="font-size:.7rem;color:var(--muted)">
+                <i class="fa-solid fa-phone" style="font-size:.6rem"></i> ${s.phone}
+                · ${s.age} سنة
+              </div>
+            </div>
+          </div>
+        </td>
+        <td class="hide-mobile">
+          ${(s.groups || []).map(g => `<span class="badge badge-blue" style="margin-left:4px;background:${g.color}22;color:${g.color}">${g.name}</span>`).join('')}
+        </td>
+        <td>
+          <div class="progress-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:${s.attendancePercent}%;background:${Format.attColor(s.attendancePercent)}"></div>
+            </div>
+            <span style="font-size:.74rem;font-weight:700;color:${Format.attColor(s.attendancePercent)};min-width:32px">
+              ${Math.round(s.attendancePercent)}%
+            </span>
+          </div>
+        </td>
+        <td>${Format.paidBadge(s.currentMonthPaid)}</td>
+        <td class="admin-only">
+          <div class="row-actions">
+            <button class="btn btn-outline btn-icon btn-sm" onclick="editStudent('${s.id}')" title="تعديل">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn btn-outline btn-icon btn-sm" style="color:var(--red)" onclick="deleteStudent('${s.id}','${s.fullName}')" title="حذف">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+      }).join('');
+
+      renderPag();
+    }
+
+    function renderPag() {
+      const total = filtered.length;
+      const pages = Math.ceil(total / PAGE_SIZE);
+      const start = (page - 1) * PAGE_SIZE + 1;
+      const end = Math.min(page * PAGE_SIZE, total);
+
+      document.getElementById('pag-info').textContent = total ? `عرض ${start}–${end} من ${total}` : '';
+      if (pages <= 1) { document.getElementById('pag-btns').innerHTML = ''; return; }
+
+      let html = `<button class="pag-btn" onclick="goPage(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
+      for (let p = 1; p <= Math.min(pages, 5); p++)
+        html += `<button class="pag-btn ${p === page ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+      html += `<button class="pag-btn" onclick="goPage(${page + 1})" ${page === pages ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
+      document.getElementById('pag-btns').innerHTML = html;
+    }
+
+    function goPage(p) {
+      if (p < 1 || p > Math.ceil(filtered.length / PAGE_SIZE)) return;
+      page = p; render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openAdd() {
+      editingId = null;
+      document.getElementById('drawer-title').innerHTML = '<i class="fa-solid fa-user-plus"></i> إضافة طالب جديد';
+      document.getElementById('save-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ الطالب';
+      ['f-fname', 'f-lname', 'f-phone', 'f-address', 'f-notes'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('f-age').value = '';
+      document.getElementById('f-gender').value = 'Male';
+      document.querySelectorAll('.grp-cb').forEach(cb => cb.checked = false);
+      Drawer.open('student');
+    }
+
+    function editStudent(id) {
+      editingId = id;
+      const s = allStudents.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('drawer-title').innerHTML = '<i class="fa-solid fa-pen"></i> تعديل بيانات الطالب';
+      document.getElementById('save-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ التعديلات';
+      document.getElementById('f-fname').value = s.firstName;
+      document.getElementById('f-lname').value = s.lastName;
+      document.getElementById('f-age').value = s.age;
+      document.getElementById('f-gender').value = s.gender;
+      document.getElementById('f-phone').value = s.phone;
+      document.getElementById('f-address').value = s.address || '';
+      document.getElementById('f-notes').value = s.notes || '';
+      const gids = (s.groups || []).map(g => g.id);
+      document.querySelectorAll('.grp-cb').forEach(cb => cb.checked = gids.includes(cb.value));
+      Drawer.open('student');
+    }
+    async function saveStudent() {
+      var firstName = document.getElementById('f-fname').value.trim();
+      var lastName = document.getElementById('f-lname').value.trim();
+      var phone = document.getElementById('f-phone').value.trim();
+      var groupIds = [];
+      document.querySelectorAll('.grp-cb:checked').forEach(function (cb) {
+        groupIds.push(cb.value);
+      });
+
+      if (!firstName || !lastName) { Toast.error('الاسم مطلوب'); return; }
+      if (!phone) { Toast.error('رقم الهاتف مطلوب'); return; }
+      if (!groupIds.length) { Toast.error('اختر حلقة واحدة على الأقل'); return; }
+
+      var btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      var body = {
+        firstName: firstName,
+        lastName: lastName,
+        age: parseInt(document.getElementById('f-age').value) || 0,
+        gender: document.getElementById('f-gender').value,
+        phone: phone,
+        address: document.getElementById('f-address').value.trim(),
+        notes: document.getElementById('f-notes').value.trim(),
+        isActive: true,
+      };
+
+      var res;
+      if (editingId) {
+        // Update بيانات الطالب الأساسية
+        res = await API.students.update(editingId, body);
+
+        // لو نجح — نحدّث الحلقات
+        if (res && res.success) {
+          var student = allStudents.find(function (s) { return s.id === editingId; });
+          var oldGroupIds = (student && student.groups)
+            ? student.groups.map(function (g) { return g.id; })
+            : [];
+
+          // حلقات جديدة — نضيفها
+          for (var i = 0; i < groupIds.length; i++) {
+            if (oldGroupIds.indexOf(groupIds[i]) === -1) {
+              await API.students.addToGroup(editingId, groupIds[i]);
+            }
+          }
+
+          // حلقات اتشالت — نحذفها
+          for (var j = 0; j < oldGroupIds.length; j++) {
+            if (groupIds.indexOf(oldGroupIds[j]) === -1) {
+              await API.students.removeFromGroup(editingId, oldGroupIds[j]);
+            }
+          }
+        }
+      } else {
+        // Create طالب جديد مع الحلقات
+        body.groupIds = groupIds;
+        res = await API.students.create(body);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ';
+
+      if (res && res.success) {
+        Toast.success(editingId ? 'تم تعديل ' + firstName : 'تم إضافة ' + firstName);
+        Drawer.close('student');
+        loadData();
+      } else {
+        Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+    function deleteStudent(id, name) {
+      Confirm.show(
+        `حذف ${name}`,
+        `هل أنت متأكد من حذف الطالب "${name}"؟ لا يمكن التراجع.`,
+        async () => {
+          const res = await API.students.delete(id);
+          if (res?.success) { Toast.success(`تم حذف ${name}`); loadData(); }
+          else Toast.error('حدث خطأ أثناء الحذف');
+        }
+      );
+    }
+
+    function exportStudents() {
+      if (!filtered.length) { Toast.error('لا توجد بيانات للتصدير'); return; }
+      Excel.exportStudents(filtered);
+    }
+
+    loadData();
+
+
+    // أضف السطر ده بعده مباشرة ↓
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') {
+        loadData();
+      }
+    });
+
+  </script>
+</body>
+
+</html>

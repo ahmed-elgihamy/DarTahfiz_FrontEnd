@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المدفوعات — دار التحفيظ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .pay-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .psc {
+      border-radius: var(--r-lg);
+      padding: 20px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .psc::before {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: -15px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .psc.g {
+      background: linear-gradient(135deg, var(--green), var(--green2));
+    }
+
+    .psc.gold {
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+    }
+
+    .psc.b {
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+    }
+
+    .psc-val {
+      font-size: 1.8rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .psc-lbl {
+      font-size: .73rem;
+      opacity: .82;
+      margin-bottom: 8px;
+    }
+
+    .psc-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, .22);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .psc-fill {
+      height: 100%;
+      background: rgba(255, 255, 255, .7);
+      border-radius: 2px;
+      transition: width .5s;
+    }
+
+    .psc-sub {
+      font-size: .7rem;
+      opacity: .7;
+    }
+
+    .unpaid-row td:first-child {
+      border-right: 3px solid var(--gold2);
+    }
+
+    @media(max-width:768px) {
+      .pay-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-bar"></div>
+  <div class="shell">
+    <div id="sidebar-wrap"></div>
+    <main class="main-content">
+      <div id="topbar-wrap"></div>
+      <div class="page-content">
+
+        <!-- Header -->
+        <div class="page-header fade-up">
+          <div class="page-header-left">
+            <h1><i class="fa-solid fa-money-bill-wave"></i> المدفوعات</h1>
+            <p>تحصيل الرسوم ومتابعة المتأخرات</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-outline" onclick="generate()">
+              <i class="fa-solid fa-bolt"></i> فواتير الشهر
+            </button>
+            <button class="btn btn-outline" onclick="exportPay()">
+              <i class="fa-solid fa-file-excel"></i> Excel
+            </button>
+            <button class="btn btn-primary" onclick="Drawer.open('pay')">
+              <i class="fa-solid fa-plus"></i> تسجيل دفعة
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="pay-summary fade-up" id="pay-sum">
+          <div class="psc g skeleton" style="height:95px"></div>
+          <div class="psc gold skeleton" style="height:95px"></div>
+          <div class="psc b skeleton" style="height:95px"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs fade-up">
+          <button class="tab-btn active" onclick="setTab('all', this)">
+            <i class="fa-solid fa-list"></i> الكل
+          </button>
+          <button class="tab-btn" onclick="setTab('unpaid', this)">
+            <i class="fa-solid fa-clock"></i> لم يدفعوا
+            <span class="tab-count" id="unpaid-cnt">0</span>
+          </button>
+          <button class="tab-btn" onclick="setTab('paid', this)">
+            <i class="fa-solid fa-circle-check"></i> دفعوا
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="toolbar fade-up">
+          <select class="filter-sel" id="f-m" onchange="load()">
+            <option value="">كل الشهور</option>
+            <option value="1">يناير</option>
+            <option value="2">فبراير</option>
+            <option value="3">مارس</option>
+            <option value="4">أبريل</option>
+            <option value="5">مايو</option>
+            <option value="6">يونيو</option>
+            <option value="7">يوليو</option>
+            <option value="8">أغسطس</option>
+            <option value="9">سبتمبر</option>
+            <option value="10">أكتوبر</option>
+            <option value="11">نوفمبر</option>
+            <option value="12">ديسمبر</option>
+          </select>
+          <select class="filter-sel" id="f-y" onchange="load()">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option> <!-- ← أضف -->
+            <option value="2027">2027</option> <!-- ← أضف -->
+            <option value="2028">2028</option> <!-- ← أضف -->
+            <option value="2029">2029</option> <!-- ← أضف -->
+          </select>
+          <select class="filter-sel" id="f-g" onchange="load()">
+            <option value="">كل الحلقات</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="card fade-up">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-table-list"></i>
+              <span id="pay-cnt">المدفوعات</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الطالب</th>
+                  <th class="hide-mobile">الحلقة</th>
+                  <th class="hide-mobile">الشهر</th>
+                  <th>المبلغ</th>
+                  <th>الحالة</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="pay-tbody">
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:40px">
+                    <div class="spinner spinner-green" style="margin:auto"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ADD PAYMENT DRAWER -->
+  <div class="drawer-overlay" id="pay-overlay" onclick="Drawer.close('pay')"></div>
+  <div class="drawer" id="pay-drawer">
+    <div class="drawer-head">
+      <h2><i class="fa-solid fa-money-bill-wave"></i> تسجيل دفعة</h2>
+      <button class="drawer-close" onclick="Drawer.close('pay')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <div class="form-group">
+        <label><i class="fa-solid fa-user-graduate"></i> الطالب <span class="req">*</span></label>
+        <select class="form-control" id="f-stu">
+          <option value="">— اختر الطالب —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-layer-group"></i> الحلقة <span class="req">*</span></label>
+        <select class="form-control" id="f-pg">
+          <option value="">— اختر الحلقة —</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>الشهر</label>
+          <select class="form-control" id="f-pm">
+            <option value="1">يناير</option>
+            <option value="2">فبراير</option>
+            <option value="3">مارس</option>
+            <option value="4">أبريل</option>
+            <option value="5">مايو</option>
+            <option value="6">يونيو</option>
+            <option value="7">يوليو</option>
+            <option value="8">أغسطس</option>
+            <option value="9">سبتمبر</option>
+            <option value="10">أكتوبر</option>
+            <option value="11">نوفمبر</option>
+            <option value="12">ديسمبر</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>السنة</label>
+          <select class="form-control" id="f-py">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option> <!-- ← أضف -->
+            <option value="2027">2027</option> <!-- ← أضف -->
+            <option value="2028">2028</option> <!-- ← أضف -->
+            <option value="2029">2029</option> <!-- ← أضف -->
+
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-money-bill"></i> المبلغ (جنيه)</label>
+        <input class="form-control" type="number" id="f-amt" value="200">
+      </div>
+      <div class="form-group">
+        <label>ملاحظة</label>
+        <input class="form-control" id="f-note" placeholder="اختياري...">
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-ghost" onclick="Drawer.close('pay')">
+        <i class="fa-solid fa-xmark"></i> إلغاء
+      </button>
+      <button class="btn btn-gold" id="save-btn" onclick="savePay()">
+        <i class="fa-solid fa-floppy-disk"></i> تسجيل الدفع
+      </button>
+    </div>
+  </div>
+
+  <div id="confirm-wrap"></div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    initPage(true);
+    renderLayout('payments');
+
+    var payments = [];
+    var filtered = [];
+    var tabFilter = 'all';
+
+    async function init() {
+      var now = new Date();
+      // في init() غيّر
+      document.getElementById('f-y').value = now.getFullYear(); // ← 2026
+      document.getElementById('f-py').value = now.getFullYear(); // ← 2026
+      var gRes = await API.groups.getAll();
+      if (gRes && gRes.success) {
+        gRes.data.forEach(function (g) {
+          var opt1 = '<option value="' + g.id + '">' + g.name + '</option>';
+          document.getElementById('f-g').innerHTML += opt1;
+          document.getElementById('f-pg').innerHTML += opt1;
+        });
+      }
+
+      var sRes = await API.students.getAll();
+      if (sRes && sRes.success) {
+        sRes.data.forEach(function (s) {
+          document.getElementById('f-stu').innerHTML +=
+            '<option value="' + s.id + '">' + s.fullName + '</option>';
+        });
+      }
+
+      load();
+    }
+
+    async function load() {
+      var m = document.getElementById('f-m').value;
+      var y = document.getElementById('f-y').value;
+      var g = document.getElementById('f-g').value;
+
+      var params = {};
+      if (m) params.month = m;
+      if (y) params.year = y;
+      if (g) params.groupId = g;
+
+      Loading.show();
+
+      var pRes = await API.payments.getAll(params);
+      var sRes = await API.payments.summary(
+        m ? parseInt(m) : new Date().getMonth() + 1,
+        y ? parseInt(y) : 2024
+      );
+
+      Loading.hide();
+
+      if (pRes && pRes.success) {
+        payments = pRes.data;
+        var unpaid = payments.filter(function (p) { return !p.isPaid; }).length;
+        document.getElementById('unpaid-cnt').textContent = unpaid;
+        applyTab();
+      }
+
+      if (sRes && sRes.success) {
+        renderSummary(sRes.data);
+      }
+    }
+
+    function renderSummary(s) {
+      var total = s.totalExpected || 1;
+      var pct = Math.round(s.totalCollected / total * 100);
+
+      document.getElementById('pay-sum').innerHTML =
+        '<div class="psc g">' +
+        '<div class="psc-lbl"><i class="fa-solid fa-circle-check"></i> المحصّل</div>' +
+        '<div class="psc-val">' + Format.number(s.totalCollected) + ' ج</div>' +
+        '<div class="psc-bar"><div class="psc-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="psc-sub">' + pct + '% من الإجمالي</div>' +
+        '</div>' +
+        '<div class="psc gold">' +
+        '<div class="psc-lbl"><i class="fa-solid fa-clock"></i> المتأخر</div>' +
+        '<div class="psc-val">' + Format.number(s.totalOutstanding) + ' ج</div>' +
+        '<div class="psc-sub">' + s.unpaidCount + ' طالب لم يدفع</div>' +
+        '</div>' +
+        '<div class="psc b">' +
+        '<div class="psc-lbl"><i class="fa-solid fa-calculator"></i> الإجمالي</div>' +
+        '<div class="psc-val">' + Format.number(s.totalExpected) + ' ج</div>' +
+        '<div class="psc-sub">' + s.paidCount + ' طالب دفعوا</div>' +
+        '</div>';
+    }
+
+    function setTab(tab, btn) {
+      tabFilter = tab;
+      document.querySelectorAll('.tab-btn').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      applyTab();
+    }
+
+    function applyTab() {
+      filtered = payments.filter(function (p) {
+        if (tabFilter === 'paid') return p.isPaid;
+        if (tabFilter === 'unpaid') return !p.isPaid;
+        return true;
+      });
+      render();
+    }
+
+    function render() {
+      var tbody = document.getElementById('pay-tbody');
+      document.getElementById('pay-cnt').textContent = filtered.length + ' دفعة';
+
+      if (!filtered.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="6">' +
+          '<div class="empty-state" style="padding:30px">' +
+          '<i class="fa-solid fa-money-bill-wave"></i>' +
+          '<h3>لا توجد بيانات</h3>' +
+          '<p>جرب تغيير الفلاتر أو توليد فواتير الشهر</p>' +
+          '</div>' +
+          '</td></tr>';
+        return;
+      }
+
+      var rows = filtered.map(function (p, i) {
+        var delay = (i * 0.02) + 's';
+        var isPaid = p.isPaid;
+        var action = isPaid
+          ? '<span style="font-size:.72rem;color:var(--muted)"><i class="fa-solid fa-circle-check"></i> تم</span>'
+          : '<button class="btn btn-gold btn-sm" onclick="markPaid(\'' + p.id + '\',\'' + p.studentName.replace(/'/g, '') + '\')">' +
+          '<i class="fa-solid fa-money-bill-wave"></i> دفع' +
+          '</button>';
+
+        return '<tr class="' + (isPaid ? '' : 'unpaid-row') + ' fade-up" style="animation-delay:' + delay + '">' +
+          '<td>' +
+          '<div style="display:flex;align-items:center;gap:10px">' +
+          '<div class="av ' + (isPaid ? 'av-green' : 'av-gold') + '">' + Format.initials(p.studentName) + '</div>' +
+          '<strong style="font-size:.87rem">' + p.studentName + '</strong>' +
+          '</div>' +
+          '</td>' +
+          '<td class="hide-mobile"><span class="badge badge-blue">' + p.groupName + '</span></td>' +
+          '<td class="hide-mobile" style="font-size:.83rem">' + p.monthName + ' ' + p.year + '</td>' +
+          '<td><strong>' + Format.number(p.amount) + ' ج</strong></td>' +
+          '<td>' + Format.paidBadge(isPaid) + '</td>' +
+          '<td>' + action + '</td>' +
+          '</tr>';
+      });
+
+      tbody.innerHTML = rows.join('');
+    }
+
+    async function markPaid(id, name) {
+      var res = await API.payments.markPaid({ paymentId: id });
+      if (res && res.success) {
+        Toast.success('تم تسجيل دفع ' + name);
+        await load(); // ← await عشان يستنى التحديث
+      } else {
+        Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+
+    async function savePay() {
+      var sid = document.getElementById('f-stu').value;
+      var gid = document.getElementById('f-pg').value;
+      var amt = document.getElementById('f-amt').value;
+
+      if (!sid) { Toast.error('اختر الطالب'); return; }
+      if (!gid) { Toast.error('اختر الحلقة'); return; }
+      if (!amt) { Toast.error('أدخل المبلغ'); return; }
+
+      var btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      var res = await API.payments.create({
+        studentId: sid,
+        groupId: gid,
+        month: parseInt(document.getElementById('f-pm').value),
+        year: parseInt(document.getElementById('f-py').value),
+        amount: parseFloat(amt),
+        notes: document.getElementById('f-note').value,
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> تسجيل الدفع';
+
+      if (res && res.success) {
+        Toast.success('تم تسجيل الدفعة بنجاح');
+        Drawer.close('pay');
+        load();
+      } else {
+        Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+
+    async function generate() {
+      var m = document.getElementById('f-m').value;
+      var y = document.getElementById('f-y').value;
+      var month = m ? parseInt(m) : new Date().getMonth() + 1;
+      var year = y ? parseInt(y) : 2024;
+
+      var res = await API.payments.generate(month, year);
+      if (res && res.success) {
+        Toast.success('تم توليد فواتير الشهر');
+        load();
+      } else {
+        Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+
+    function exportPay() {
+      if (!filtered.length) { Toast.error('لا توجد بيانات للتصدير'); return; }
+      Excel.exportPayments(filtered);
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المعلمون — دار التحفيظ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .tc-card {
+      background: #fff;
+      border: 1px solid var(--border2);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tc-top {
+      padding: 22px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tc-top::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='15,2 28,8.5 28,21.5 15,28 2,21.5 2,8.5' fill='none' stroke='%23ffffff' stroke-opacity='0.08' stroke-width='1'/%3E%3C/svg%3E");
+    }
+
+    .tc-av {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .15);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 900;
+      border: 2.5px solid rgba(255, 255, 255, .2);
+      position: relative;
+      z-index: 1;
+    }
+
+    .tc-name {
+      color: #fff;
+      font-weight: 800;
+      font-size: .95rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tc-sub {
+      color: rgba(255, 255, 255, .6);
+      font-size: .7rem;
+      background: rgba(255, 255, 255, .12);
+      padding: 2px 10px;
+      border-radius: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tc-body {
+      padding: 16px 18px;
+    }
+
+    .tc-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--border2);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .tcs {
+      padding: 10px 6px;
+      text-align: center;
+      background: #fff;
+    }
+
+    .tcs:not(:last-child) {
+      border-left: 1px solid var(--border2);
+    }
+
+    .tcs-val {
+      font-size: .95rem;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .tcs-lbl {
+      font-size: .62rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .tc-actions {
+      display: flex;
+      gap: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-bar"></div>
+  <div class="shell">
+    <div id="sidebar-wrap"></div>
+    <main class="main-content">
+      <div id="topbar-wrap"></div>
+      <div class="page-content">
+
+        <div class="page-header fade-up">
+          <div class="page-header-left">
+            <h1><i class="fa-solid fa-chalkboard-user"></i> المعلمون</h1>
+            <p>إدارة المعلمين والرواتب وجلسات الحضور</p>
+          </div>
+          <button class="btn btn-primary" onclick="openAdd()">
+            <i class="fa-solid fa-plus"></i> إضافة معلم
+          </button>
+        </div>
+
+        <div class="stats-grid fade-up">
+          <div class="stat-card s-green">
+            <div class="stat-icon si-green"><i class="fa-solid fa-chalkboard-user"></i></div>
+            <div>
+              <div class="stat-val" id="st-t">—</div>
+              <div class="stat-label">إجمالي المعلمين</div>
+            </div>
+          </div>
+          <div class="stat-card s-green">
+            <div class="stat-icon si-green"><i class="fa-solid fa-circle-check"></i></div>
+            <div>
+              <div class="stat-val" id="st-p">—</div>
+              <div class="stat-label">استلموا الراتب</div>
+            </div>
+          </div>
+          <div class="stat-card s-gold">
+            <div class="stat-icon si-gold"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <div class="stat-val" id="st-u">—</div>
+              <div class="stat-label">لم يستلموا</div>
+            </div>
+          </div>
+          <div class="stat-card s-blue">
+            <div class="stat-icon si-blue"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div>
+              <div class="stat-val" id="st-s">—</div>
+              <div class="stat-label">إجمالي الرواتب</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar fade-up">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search" placeholder="ابحث باسم المعلم..." oninput="applyFilter()">
+          </div>
+          <select class="filter-sel" id="f-sal" onchange="applyFilter()">
+            <option value="">كل حالات الراتب</option>
+            <option value="true">استلم ✅</option>
+            <option value="false">لم يستلم ⏳</option>
+          </select>
+        </div>
+
+        <div class="tc-grid fade-up" id="tc-grid">
+          <div class="skeleton" style="height:260px;border-radius:var(--r-lg)"></div>
+          <div class="skeleton" style="height:260px;border-radius:var(--r-lg)"></div>
+          <div class="skeleton" style="height:260px;border-radius:var(--r-lg)"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ADD/EDIT DRAWER -->
+  <div class="drawer-overlay" id="teacher-overlay" onclick="Drawer.close('teacher')"></div>
+  <div class="drawer" id="teacher-drawer">
+    <div class="drawer-head">
+      <h2 id="dr-title"><i class="fa-solid fa-user-plus"></i> إضافة معلم</h2>
+      <button class="drawer-close" onclick="Drawer.close('teacher')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div class="section-divider"><i class="fa-solid fa-id-card"></i> البيانات الشخصية</div>
+      <div class="form-row">
+        <div class="form-group"><label>اللقب</label><input class="form-control" id="f-title" value="الشيخ"></div>
+        <div class="form-group"><label>الاسم الكامل <span class="req">*</span></label><input class="form-control"
+            id="f-name" placeholder="محمد أحمد"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>الهاتف <span class="req">*</span></label><input class="form-control" id="f-phone"
+            placeholder="01xxxxxxxxx" inputmode="tel"></div>
+        <div class="form-group"><label>البريد الإلكتروني</label><input class="form-control" type="email" id="f-email"
+            placeholder="teacher@dar.com"></div>
+      </div>
+      <div class="form-group"><label>العنوان</label><input class="form-control" id="f-addr"
+          placeholder="المدينة، الحي..."></div>
+      <div class="section-divider"><i class="fa-solid fa-briefcase"></i> بيانات العمل</div>
+      <div class="form-row">
+        <div class="form-group"><label>الراتب (جنيه) <span class="req">*</span></label><input class="form-control"
+            type="number" id="f-salary-inp" placeholder="2000"></div>
+        <div class="form-group"><label>التخصص</label>
+          <select class="form-control" id="f-spec">
+            <option>تحفيظ القرآن الكريم</option>
+            <option>التجويد والقراءات</option>
+            <option>التفسير والعلوم الشرعية</option>
+          </select>
+        </div>
+      </div>
+      <div id="acc-section">
+        <div class="section-divider"><i class="fa-solid fa-key"></i> حساب الدخول</div>
+        <div class="form-row">
+          <div class="form-group"><label>إيميل الدخول <span class="req">*</span></label><input class="form-control"
+              type="email" id="f-ue" placeholder="teacher@dar.com"></div>
+          <div class="form-group"><label>كلمة المرور <span class="req">*</span></label><input class="form-control"
+              type="password" id="f-up" placeholder="min 6 chars"></div>
+        </div>
+      </div>
+      <div class="form-group"><label>ملاحظات</label><textarea class="form-control" id="f-notes" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-ghost" onclick="Drawer.close('teacher')"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveTeacher()"><i class="fa-solid fa-floppy-disk"></i>
+        حفظ</button>
+    </div>
+  </div>
+
+  <!-- SESSION DRAWER -->
+  <div class="drawer-overlay" id="session-overlay" onclick="Drawer.close('session')"></div>
+  <div class="drawer" id="session-drawer">
+    <div class="drawer-head">
+      <h2><i class="fa-solid fa-key"></i> إنشاء جلسة معلم</h2>
+      <button class="drawer-close" onclick="Drawer.close('session')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div style="background:#0e1820;border-radius:var(--r-lg);padding:20px;margin-bottom:20px">
+        <div style="font-family:'Amiri',serif;font-size:1.1rem;color:#d4a017;margin-bottom:4px">جلسة تسجيل الحضور</div>
+        <div style="font-size:.78rem;color:rgba(255,255,255,.4)">ابعت الكود للمعلم يسجل الحضور بنفسه</div>
+      </div>
+      <div class="form-group"><label>الحلقة <span class="req">*</span></label><select class="form-control" id="sess-g">
+          <option value="">— اختر —</option>
+        </select></div>
+      <div class="form-row">
+        <div class="form-group"><label>تاريخ الجلسة</label><input class="form-control" type="date" id="sess-d"></div>
+        <div class="form-group"><label>مدة الصلاحية</label>
+          <select class="form-control" id="sess-ttl">
+            <option value="1">ساعة</option>
+            <option value="2">ساعتان</option>
+            <option value="4" selected>4 ساعات</option>
+            <option value="24">يوم كامل</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="createSession()">
+        <i class="fa-solid fa-key"></i> إنشاء الكود
+      </button>
+      <div id="code-result" style="display:none;margin-top:16px">
+        <div
+          style="background:var(--surface);border:2px dashed var(--border);border-radius:var(--r-lg);padding:22px;text-align:center;font-family:monospace;font-size:2rem;font-weight:900;letter-spacing:10px;color:var(--ink)"
+          id="code-display"></div>
+        <button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px" onclick="copyCode()">
+          <i class="fa-solid fa-copy"></i> نسخ الكود
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-wrap"></div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    initPage(true);
+    renderLayout('teachers');
+
+    var teachers = [];
+    var filtered = [];
+    var groups = [];
+    var editId = null;
+    var sessTeacherId = null;
+    var sessCode = '';
+    var COLORS = ['#1a6b3a', '#b5820a', '#1a6fa8', '#6e3db5', '#be3a2b', '#1a7a6e'];
+
+    // ── Helper: get field (camelCase or PascalCase) ────────────
+    function getField(obj, camel, pascal) {
+      // يجرب camelCase الأول ثم PascalCase
+      if (obj[camel] !== undefined && obj[camel] !== null) return obj[camel];
+      if (obj[pascal] !== undefined && obj[pascal] !== null) return obj[pascal];
+      return null;
+    }
+
+    // ── Normalize teacher object ───────────────────────────────
+    function normalizeTeacher(t) {
+      return {
+        id: getField(t, 'id', 'Id') || '',
+        title: getField(t, 'title', 'Title') || 'الشيخ',
+        fullName: getField(t, 'fullName', 'FullName') || '',
+        displayName: getField(t, 'displayName', 'DisplayName') || '',
+        phone: getField(t, 'phone', 'Phone') || '',
+        email: getField(t, 'email', 'Email') || '',
+        address: getField(t, 'address', 'Address') || '',
+        salary: parseFloat(getField(t, 'salary', 'Salary')) || 0,
+        salaryPaid: getField(t, 'salaryPaid', 'SalaryPaid') === true,
+        specialty: getField(t, 'specialty', 'Specialty') || '',
+        notes: getField(t, 'notes', 'Notes') || '',
+        totalStudents: parseInt(getField(t, 'totalStudents', 'TotalStudents')) || 0,
+        groups: getField(t, 'groups', 'Groups') || [],
+      };
+    }
+
+    // ── Load ──────────────────────────────────────────────────
+    async function loadData() {
+      Loading.show();
+      var tRes = await API.teachers.getAll();
+      var gRes = await API.groups.getAll();
+      Loading.hide();
+
+      if (gRes && gRes.success) {
+        groups = gRes.data;
+        var sel = document.getElementById('sess-g');
+        sel.innerHTML = '<option value="">— اختر —</option>';
+        groups.forEach(function (g) {
+          var gName = getField(g, 'name', 'Name') || '';
+          var gId = getField(g, 'id', 'Id') || '';
+          sel.innerHTML += '<option value="' + gId + '">' + gName + '</option>';
+        });
+      }
+
+      if (tRes && tRes.success) {
+        // normalize كل المعلمين
+        teachers = tRes.data.map(normalizeTeacher);
+        updateStats();
+        applyFilter();
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('st-t').textContent = teachers.length;
+      document.getElementById('st-p').textContent = teachers.filter(function (t) { return t.salaryPaid; }).length;
+      document.getElementById('st-u').textContent = teachers.filter(function (t) { return !t.salaryPaid; }).length;
+      var total = teachers.reduce(function (a, t) { return a + t.salary; }, 0);
+      document.getElementById('st-s').textContent = Format.number(total) + ' ج';
+    }
+
+    function applyFilter() {
+      var q = document.getElementById('search').value.toLowerCase();
+      var s = document.getElementById('f-sal').value;
+      filtered = teachers.filter(function (t) {
+        if (q && t.displayName.toLowerCase().indexOf(q) === -1) return false;
+        if (s === 'true' && !t.salaryPaid) return false;
+        if (s === 'false' && t.salaryPaid) return false;
+        return true;
+      });
+      render();
+    }
+
+    // ── Render ────────────────────────────────────────────────
+    function render() {
+      var grid = document.getElementById('tc-grid');
+
+      if (!filtered.length) {
+        grid.innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1">' +
+          '<i class="fa-solid fa-magnifying-glass"></i>' +
+          '<h3>لا توجد نتائج</h3></div>';
+        return;
+      }
+
+      var html = filtered.map(function (t, i) {
+        var color = COLORS[i % COLORS.length];
+        var initials = Format.initials(t.fullName);
+        var groupName = (t.groups && t.groups[0])
+          ? (getField(t.groups[0], 'name', 'Name') || 'بدون حلقة')
+          : 'بدون حلقة';
+
+        var isPaid = t.salaryPaid;
+        var salaryText = t.salary > 0 ? Format.number(t.salary) : '—';
+        var salIcon = isPaid ? '✅' : '⏳';
+        var salBtnCls = isPaid ? 'btn-outline' : 'btn-gold';
+        var salBtnIco = isPaid
+          ? '<i class="fa-solid fa-rotate-left"></i>'
+          : '<i class="fa-solid fa-money-bill-wave"></i>';
+
+        return (
+          '<div class="tc-card fade-up" style="animation-delay:' + (i * 0.05) + 's">' +
+          '<div class="tc-top" style="background:linear-gradient(135deg,' + color + ',' + color + 'cc)">' +
+          '<div class="tc-av">' + initials + '</div>' +
+          '<div class="tc-name">' + t.displayName + '</div>' +
+          '<div class="tc-sub">' +
+          '<i class="fa-solid fa-layer-group" style="font-size:.6rem"></i> ' + groupName +
+          '</div>' +
+          '</div>' +
+          '<div class="tc-body">' +
+          '<div class="tc-stats">' +
+          '<div class="tcs">' +
+          '<div class="tcs-val">' + t.totalStudents + '</div>' +
+          '<div class="tcs-lbl">طالب</div>' +
+          '</div>' +
+          '<div class="tcs" id="salary-cell-' + t.id + '">' +
+          '<div class="tcs-val">' + salaryText + '</div>' +
+          '<div class="tcs-lbl">جنيه</div>' +
+          '</div>' +
+          '<div class="tcs" id="status-cell-' + t.id + '">' +
+          '<div class="tcs-val">' + salIcon + '</div>' +
+          '<div class="tcs-lbl">الراتب</div>' +
+          '</div>' +
+          '</div>' +
+          '<div class="tc-actions">' +
+          '<button class="btn btn-primary btn-sm" style="flex:1;justify-content:center" onclick="openSession(\'' + t.id + '\')">' +
+          '<i class="fa-solid fa-key"></i> جلسة' +
+          '</button>' +
+          '<button class="btn btn-sm ' + salBtnCls + '" id="sal-btn-' + t.id + '" onclick="doToggle(\'' + t.id + '\')" title="' + (isPaid ? 'إلغاء صرف الراتب' : 'صرف الراتب') + '">' +
+          salBtnIco +
+          '</button>' +
+          '<button class="btn btn-outline btn-icon btn-sm" onclick="editTeacher(\'' + t.id + '\')" title="تعديل">' +
+          '<i class="fa-solid fa-pen"></i>' +
+          '</button>' +
+          '<button class="btn btn-outline btn-icon btn-sm" style="color:var(--red)" onclick="doDelete(\'' + t.id + '\')" title="حذف">' +
+          '<i class="fa-solid fa-trash"></i>' +
+          '</button>' +
+          '</div>' +
+          '</div>' +
+          '</div>'
+        );
+      });
+
+      grid.innerHTML = html.join('');
+    }
+
+    // ── Toggle Salary ─────────────────────────────────────────
+    async function doToggle(id) {
+      var teacher = null;
+      var idx = -1;
+      for (var i = 0; i < teachers.length; i++) {
+        if (teachers[i].id === id) { teacher = teachers[i]; idx = i; break; }
+      }
+      if (!teacher) { Toast.error('المعلم غير موجود'); return; }
+
+      var btn = document.getElementById('sal-btn-' + id);
+      if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div>'; }
+
+      try {
+        var token = localStorage.getItem('token');
+        var res = await fetch('https://localhost:7167/api/teachers/' + id + '/salary/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({})
+        });
+
+        var data = await res.json();
+
+        if (data && data.success) {
+          // عكس القيمة
+          teachers[idx].salaryPaid = !teachers[idx].salaryPaid;
+          var newPaid = teachers[idx].salaryPaid;
+
+          // حدّث الـ UI مباشرة بدون re-render
+          var statusCell = document.getElementById('status-cell-' + id);
+          if (statusCell) {
+            statusCell.innerHTML =
+              '<div class="tcs-val">' + (newPaid ? '✅' : '⏳') + '</div>' +
+              '<div class="tcs-lbl">الراتب</div>';
+          }
+
+          if (btn) {
+            btn.disabled = false;
+            btn.className = 'btn btn-sm ' + (newPaid ? 'btn-outline' : 'btn-gold');
+            btn.title = newPaid ? 'إلغاء صرف الراتب' : 'صرف الراتب';
+            btn.innerHTML = newPaid
+              ? '<i class="fa-solid fa-rotate-left"></i>'
+              : '<i class="fa-solid fa-money-bill-wave"></i>';
+          }
+
+          updateStats();
+          Toast.success(newPaid ? '✅ تم صرف الراتب' : '↩️ تم إلغاء صرف الراتب');
+
+        } else {
+          Toast.error('فشل: ' + (data && data.message ? data.message : 'خطأ غير معروف'));
+          if (btn) {
+            btn.disabled = false;
+            btn.className = 'btn btn-sm ' + (teacher.salaryPaid ? 'btn-outline' : 'btn-gold');
+            btn.innerHTML = teacher.salaryPaid
+              ? '<i class="fa-solid fa-rotate-left"></i>'
+              : '<i class="fa-solid fa-money-bill-wave"></i>';
+          }
+        }
+      } catch (err) {
+        Toast.error('خطأ: ' + err.message);
+        if (btn) {
+          btn.disabled = false;
+          btn.className = 'btn btn-sm ' + (teacher.salaryPaid ? 'btn-outline' : 'btn-gold');
+          btn.innerHTML = teacher.salaryPaid
+            ? '<i class="fa-solid fa-rotate-left"></i>'
+            : '<i class="fa-solid fa-money-bill-wave"></i>';
+        }
+      }
+    }
+
+    // ── Add ───────────────────────────────────────────────────
+    function openAdd() {
+      editId = null;
+      document.getElementById('dr-title').innerHTML = '<i class="fa-solid fa-user-plus"></i> إضافة معلم جديد';
+      document.getElementById('f-title').value = 'الشيخ';
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-phone').value = '';
+      document.getElementById('f-email').value = '';
+      document.getElementById('f-addr').value = '';
+      document.getElementById('f-salary-inp').value = '';
+      document.getElementById('f-notes').value = '';
+      document.getElementById('f-ue').value = '';
+      document.getElementById('f-up').value = '';
+      document.getElementById('acc-section').style.display = '';
+      Drawer.open('teacher');
+    }
+
+    // ── Edit ──────────────────────────────────────────────────
+    function editTeacher(id) {
+      editId = id;
+      var t = null;
+      for (var i = 0; i < teachers.length; i++) {
+        if (teachers[i].id === id) { t = teachers[i]; break; }
+      }
+      if (!t) return;
+
+      document.getElementById('dr-title').innerHTML = '<i class="fa-solid fa-pen"></i> تعديل بيانات المعلم';
+      document.getElementById('f-title').value = t.title;
+      document.getElementById('f-name').value = t.fullName;
+      document.getElementById('f-phone').value = t.phone;
+      document.getElementById('f-email').value = t.email;
+      document.getElementById('f-addr').value = t.address;
+      document.getElementById('f-salary-inp').value = t.salary;
+      document.getElementById('f-notes').value = t.notes;
+      document.getElementById('acc-section').style.display = 'none';
+      Drawer.open('teacher');
+    }
+
+    // ── Save ──────────────────────────────────────────────────
+    async function saveTeacher() {
+      var title = document.getElementById('f-title').value.trim() || 'الشيخ';
+      var name = document.getElementById('f-name').value.trim();
+      var phone = document.getElementById('f-phone').value.trim();
+      var sal = parseFloat(document.getElementById('f-salary-inp').value) || 0;
+
+      if (!name) { Toast.error('اسم المعلم مطلوب'); return; }
+      if (!phone) { Toast.error('رقم الهاتف مطلوب'); return; }
+
+      var btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      var body = {
+        title: title,
+        fullName: name,
+        phone: phone,
+        email: document.getElementById('f-email').value,
+        address: document.getElementById('f-addr').value,
+        salary: sal,
+        joinDate: null,
+        specialty: document.getElementById('f-spec').value,
+        notes: document.getElementById('f-notes').value,
+      };
+
+      var res;
+      if (editId) {
+        res = await API.teachers.update(editId, body);
+      } else {
+        var uEmail = document.getElementById('f-ue').value.trim();
+        var uPass = document.getElementById('f-up').value;
+        if (!uEmail) { Toast.error('إيميل الدخول مطلوب'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ'; return; }
+        if (!uPass) { Toast.error('كلمة المرور مطلوبة'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ'; return; }
+        body.userEmail = uEmail;
+        body.userPassword = uPass;
+        res = await API.teachers.create(body);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ';
+
+      if (res && res.success) {
+        Toast.success('تم ' + (editId ? 'تعديل' : 'إضافة') + ' ' + title + ' ' + name);
+        Drawer.close('teacher');
+        document.getElementById('acc-section').style.display = '';
+        editId = null;
+        loadData();
+      } else {
+        Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+
+    // ── Delete ────────────────────────────────────────────────
+    function doDelete(id) {
+      var t = null;
+      for (var i = 0; i < teachers.length; i++) {
+        if (teachers[i].id === id) { t = teachers[i]; break; }
+      }
+      if (!t) return;
+      Confirm.show(
+        'حذف ' + t.displayName,
+        'هل أنت متأكد من حذف ' + t.displayName + '؟',
+        async function () {
+          var res = await API.teachers.delete(id);
+          if (res && res.success) { Toast.success('تم الحذف'); loadData(); }
+          else Toast.error('حدث خطأ');
+        }
+      );
+    }
+
+    // ── Session ───────────────────────────────────────────────
+    function openSession(tid) {
+      sessTeacherId = tid;
+      document.getElementById('sess-d').value = new Date().toISOString().split('T')[0];
+      document.getElementById('code-result').style.display = 'none';
+      Drawer.open('session');
+    }
+
+    async function createSession() {
+      var gid = document.getElementById('sess-g').value;
+      if (!gid) { Toast.error('اختر الحلقة'); return; }
+      var res = await API.sessions.create({
+        teacherId: sessTeacherId,
+        groupId: gid,
+        sessionDate: document.getElementById('sess-d').value,
+        expiryHours: parseInt(document.getElementById('sess-ttl').value),
+      });
+      if (res && res.success) {
+        sessCode = res.data.code;
+        document.getElementById('code-display').textContent = sessCode;
+        document.getElementById('code-result').style.display = '';
+        Toast.success('تم إنشاء الكود: ' + sessCode);
+      } else {
+        Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(sessCode).catch(function () {
+        var el = document.getElementById('code-display');
+        var r = document.createRange();
+        r.selectNode(el);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(r);
+        document.execCommand('copy');
+      });
+      Toast.info('تم نسخ الكود: ' + sessCode);
+    }
+
+    loadData();
+  </script>
+</body>
+
+</html>

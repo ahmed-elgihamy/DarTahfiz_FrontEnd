@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الحضور — دار التحفيظ</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+.att-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 20px; border-bottom: 1px solid #f0ece4;
+  transition: background var(--t-fast); gap: 12px;
+}
+.att-row:last-child { border-bottom: none; }
+.att-row:hover { background: #faf8f4; }
+.att-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.att-btn {
+  padding: 7px 14px; border-radius: var(--r-sm);
+  font-family: 'Cairo', sans-serif; font-size: .78rem; font-weight: 700;
+  cursor: pointer; border: 1.5px solid var(--border2);
+  background: var(--surface); color: var(--muted);
+  transition: all var(--t); display: flex; align-items: center; gap: 5px;
+  -webkit-tap-highlight-color: transparent;
+}
+.att-btn i { font-size: .72rem; }
+.att-btn:hover { border-color: var(--green); color: var(--green); }
+.att-btn.present.sel { background: var(--green-pale); border-color: var(--green); color: var(--green); }
+.att-btn.absent.sel  { background: var(--red-pale);   border-color: var(--red);   color: var(--red); }
+.att-btn.late.sel    { background: var(--gold-pale);  border-color: var(--gold2); color: var(--gold2); }
+
+.att-summary { display: flex; gap: 10px; flex-wrap: wrap; }
+.att-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 13px; border-radius: 20px;
+  font-size: .78rem; font-weight: 700;
+}
+.att-pill.p { background: var(--green-pale); color: var(--green); }
+.att-pill.a { background: var(--red-pale);   color: var(--red); }
+.att-pill.l { background: var(--gold-pale);  color: var(--gold2); }
+
+@media (max-width: 480px) {
+  .att-row { flex-wrap: wrap; }
+  .att-btns { width: 100%; justify-content: flex-end; }
+  .att-btn span { display: none; }
+  .att-btn { padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div id="loading-bar"></div>
+<div class="shell">
+  <div id="sidebar-wrap"></div>
+  <main class="main-content">
+    <div id="topbar-wrap"></div>
+    <div class="page-content">
+
+      <div class="page-header fade-up">
+        <div class="page-header-left">
+          <h1><i class="fa-solid fa-clipboard-list"></i> الحضور والغياب</h1>
+          <p>تسجيل ومتابعة حضور الطلاب</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary" id="save-btn" onclick="saveAttendance()" style="display:none">
+            <i class="fa-solid fa-floppy-disk"></i> حفظ الحضور
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs fade-up">
+        <button class="tab-btn active" onclick="showTab('sheet',this)">
+          <i class="fa-solid fa-clipboard-list"></i> كشف الحضور
+        </button>
+        <button class="tab-btn" onclick="showTab('report',this)">
+          <i class="fa-solid fa-chart-bar"></i> تقرير الغياب
+        </button>
+      </div>
+
+      <!-- SHEET -->
+      <div id="tab-sheet">
+        <!-- Filters -->
+        <div class="card fade-up">
+          <div class="card-body" style="padding:14px 18px">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:8px">
+                <label style="font-size:.75rem;font-weight:700;color:var(--muted);white-space:nowrap">
+                  <i class="fa-solid fa-layer-group"></i> الحلقة
+                </label>
+                <select class="filter-sel" id="sel-group" onchange="loadStudents()">
+                  <option value="">— اختر —</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <label style="font-size:.75rem;font-weight:700;color:var(--muted);white-space:nowrap">
+                  <i class="fa-solid fa-calendar"></i> التاريخ
+                </label>
+                <input type="date" class="filter-sel" id="sel-date" onchange="loadExisting()">
+              </div>
+              <div class="att-summary" id="att-summary" style="display:none">
+                <div class="att-pill p"><i class="fa-solid fa-circle-check"></i> <span id="cnt-p">0</span> حاضر</div>
+                <div class="att-pill a"><i class="fa-solid fa-circle-xmark"></i> <span id="cnt-a">0</span> غائب</div>
+                <div class="att-pill l"><i class="fa-solid fa-clock"></i> <span id="cnt-l">0</span> متأخر</div>
+              </div>
+              <div style="margin-right:auto;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-outline btn-sm" onclick="markAll('Present')">
+                  <i class="fa-solid fa-circle-check"></i> كل حاضر
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="markAll('Absent')">
+                  <i class="fa-solid fa-circle-xmark"></i> كل غائب
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="exportSheet()">
+                  <i class="fa-solid fa-file-excel"></i> تصدير
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty -->
+        <div class="empty-state fade-up" id="no-group">
+          <i class="fa-solid fa-layer-group"></i>
+          <h3>اختر الحلقة أولاً</h3>
+          <p>اختر الحلقة والتاريخ لتسجيل الحضور</p>
+        </div>
+
+        <!-- Attendance List -->
+        <div class="card fade-up" id="att-card" style="display:none">
+          <div class="card-header">
+            <div class="card-title" id="att-title">
+              <i class="fa-solid fa-users"></i> كشف الحضور
+            </div>
+            <span style="font-size:.78rem;color:var(--muted)" id="att-count"></span>
+          </div>
+          <div id="att-list"></div>
+        </div>
+      </div>
+
+      <!-- REPORT -->
+      <div id="tab-report" style="display:none">
+        <div class="card fade-up">
+          <div class="card-body" style="padding:14px 18px">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <select class="filter-sel" id="rep-group">
+                <option value="">كل الحلقات</option>
+              </select>
+              <input type="date" class="filter-sel" id="rep-from">
+              <span style="color:var(--muted);font-size:.82rem">إلى</span>
+              <input type="date" class="filter-sel" id="rep-to">
+              <button class="btn btn-primary btn-sm" onclick="loadReport()">
+                <i class="fa-solid fa-magnifying-glass"></i> بحث
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="exportReport()">
+                <i class="fa-solid fa-file-excel"></i> تصدير Excel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card fade-up">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-chart-bar"></i> تقرير الغياب المتكرر</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الطالب</th>
+                  <th><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> حاضر</th>
+                  <th><i class="fa-solid fa-circle-xmark" style="color:var(--red)"></i> غائب</th>
+                  <th><i class="fa-solid fa-clock" style="color:var(--gold2)"></i> متأخر</th>
+                  <th>نسبة الحضور</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="report-tbody">
+                <tr><td colspan="6">
+                  <div class="empty-state" style="padding:30px">
+                    <i class="fa-solid fa-chart-bar"></i>
+                    <p>اضغط بحث لتحميل التقرير</p>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="confirm-wrap"></div>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  initPage();
+  renderLayout('attendance');
+
+  let allGroups = [], students = [], attMap = {}, reportData = [];
+
+  async function init() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('sel-date').value  = today;
+    document.getElementById('rep-from').value  = new Date(new Date().setDate(1)).toISOString().split('T')[0];
+    document.getElementById('rep-to').value    = today;
+
+    const res = await API.groups.getAll();
+    if (res?.success) {
+      allGroups = res.data;
+      ['sel-group','rep-group'].forEach(id => {
+        const sel = document.getElementById(id);
+        allGroups.forEach(g => sel.innerHTML += `<option value="${g.id}">${g.name}</option>`);
+      });
+    }
+  }
+
+  function showTab(tab, btn) {
+    document.getElementById('tab-sheet').style.display  = tab === 'sheet'  ? '' : 'none';
+    document.getElementById('tab-report').style.display = tab === 'report' ? '' : 'none';
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  async function loadStudents() {
+    const groupId = document.getElementById('sel-group').value;
+    if (!groupId) {
+      document.getElementById('no-group').style.display  = '';
+      document.getElementById('att-card').style.display  = 'none';
+      document.getElementById('save-btn').style.display  = 'none';
+      return;
+    }
+
+    Loading.show();
+    const res = await API.students.getAll(groupId);
+    Loading.hide();
+    if (!res?.success) return;
+
+    students = res.data;
+    attMap   = {};
+    students.forEach(s => attMap[s.id] = 'Present');
+
+    const g = allGroups.find(x => x.id === groupId);
+    document.getElementById('no-group').style.display  = 'none';
+    document.getElementById('att-card').style.display  = '';
+    document.getElementById('save-btn').style.display  = '';
+    document.getElementById('att-title').innerHTML     = `<i class="fa-solid fa-users"></i> ${g?.name || ''} — ${document.getElementById('sel-date').value}`;
+    document.getElementById('att-count').textContent   = `${students.length} طالب`;
+    document.getElementById('att-summary').style.display = '';
+
+    await loadExisting();
+    renderList();
+  }
+
+  async function loadExisting() {
+    const groupId = document.getElementById('sel-group').value;
+    const date    = document.getElementById('sel-date').value;
+    if (!groupId || !date || !students.length) return;
+    const res = await API.attendance.get(groupId, date);
+    if (res?.success) { res.data.forEach(a => attMap[a.studentId] = a.status); renderList(); }
+  }
+
+  function renderList() {
+    updateSummary();
+    document.getElementById('att-list').innerHTML = students.map(s => `
+      <div class="att-row">
+        <div style="display:flex;align-items:center;gap:11px;flex:1;min-width:0">
+          <div class="av av-green">${Format.initials(s.fullName)}</div>
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.fullName}</div>
+            <div style="font-size:.7rem;color:var(--muted)">${Math.round(s.attendancePercent)}% حضور</div>
+          </div>
+        </div>
+        <div class="att-btns">
+          <button class="att-btn present ${attMap[s.id]==='Present'?'sel':''}"
+                  onclick="setStatus('${s.id}','Present',this)">
+            <i class="fa-solid fa-circle-check"></i><span>حاضر</span>
+          </button>
+          <button class="att-btn absent ${attMap[s.id]==='Absent'?'sel':''}"
+                  onclick="setStatus('${s.id}','Absent',this)">
+            <i class="fa-solid fa-circle-xmark"></i><span>غائب</span>
+          </button>
+          <button class="att-btn late ${attMap[s.id]==='Late'?'sel':''}"
+                  onclick="setStatus('${s.id}','Late',this)">
+            <i class="fa-solid fa-clock"></i><span>متأخر</span>
+          </button>
+        </div>
+      </div>`).join('');
+  }
+
+  function setStatus(id, status, btn) {
+    attMap[id] = status;
+    const row = btn.closest('.att-row');
+    row.querySelectorAll('.att-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const vals = Object.values(attMap);
+    document.getElementById('cnt-p').textContent = vals.filter(v => v === 'Present').length;
+    document.getElementById('cnt-a').textContent = vals.filter(v => v === 'Absent').length;
+    document.getElementById('cnt-l').textContent = vals.filter(v => v === 'Late').length;
+  }
+
+  function markAll(status) {
+    students.forEach(s => attMap[s.id] = status);
+    renderList();
+  }
+
+  async function saveAttendance() {
+    const groupId = document.getElementById('sel-group').value;
+    const date    = document.getElementById('sel-date').value;
+    if (!groupId || !students.length) { Toast.error('اختر الحلقة أولاً'); return; }
+
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+
+    const res = await API.attendance.bulk({
+      groupId, date,
+      entries: students.map(s => ({ studentId: s.id, status: attMap[s.id] || 'Present' })),
+    });
+
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ الحضور';
+    if (res?.success) Toast.success('✅ تم حفظ الحضور بنجاح');
+    else              Toast.error(res?.message || 'حدث خطأ');
+  }
+
+  function exportSheet() {
+    if (!students.length) { Toast.error('لا توجد بيانات'); return; }
+    const date    = document.getElementById('sel-date').value;
+    const groupId = document.getElementById('sel-group').value;
+    const g       = allGroups.find(x => x.id === groupId);
+    const records = students.map(s => ({
+      studentId:   s.id,
+      studentName: s.fullName,
+      groupName:   g?.name || '',
+      date,
+      status:      attMap[s.id] || 'Present',
+    }));
+    Excel.exportAttendance(records, g?.name, date);
+  }
+
+  async function loadReport() {
+    const groupId = document.getElementById('rep-group').value;
+    const from    = document.getElementById('rep-from').value;
+    const to      = document.getElementById('rep-to').value;
+
+    Loading.show();
+    const res = await API.attendance.report(groupId || undefined, from, to);
+    Loading.hide();
+
+    if (!res?.success) { Toast.error('حدث خطأ'); return; }
+    reportData = res.data;
+
+    if (!reportData.length) {
+      document.getElementById('report-tbody').innerHTML = `<tr><td colspan="6">
+        <div class="empty-state" style="padding:30px"><i class="fa-solid fa-chart-bar"></i><p>لا توجد بيانات لهذه الفترة</p></div>
+      </td></tr>`;
+      return;
+    }
+
+    document.getElementById('report-tbody').innerHTML = reportData.map((r, i) => `
+      <tr class="fade-up" style="animation-delay:${i*.03}s">
+        <td><strong>${r.studentName}</strong></td>
+        <td><span class="badge badge-green">${r.presentDays}</span></td>
+        <td><span class="badge badge-red">${r.absentDays}</span></td>
+        <td><span class="badge badge-gold">${r.lateDays}</span></td>
+        <td>
+          <div class="progress-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:${r.percent}%;background:${Format.attColor(r.percent)}"></div>
+            </div>
+            <span style="font-size:.74rem;font-weight:700;color:${Format.attColor(r.percent)}">${Math.round(r.percent)}%</span>
+          </div>
+        </td>
+        <td>
+          <span class="badge ${r.percent>=80?'badge-green':r.percent>=60?'badge-gold':'badge-red'}">
+            <i class="fa-solid fa-${r.percent>=80?'circle-check':r.percent>=60?'triangle-exclamation':'circle-xmark'}"></i>
+            ${r.percent>=80?'منتظم':r.percent>=60?'متذبذب':'خطر'}
+          </span>
+        </td>
+      </tr>`).join('');
+  }
+
+  function exportReport() {
+    if (!reportData.length) { Toast.error('لا توجد بيانات — اضغط بحث أولاً'); return; }
+    Excel.exportAttendanceReport(reportData);
+  }
+
+  init();
+</script>
+</body>
+</html>
