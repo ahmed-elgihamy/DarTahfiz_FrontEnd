@@ -4,7 +4,7 @@
 // Works on all browsers + mobile
 // ============================================================
 
-var API_URL = 'https://localhost:7167/api';
+var API_URL = 'http://192.168.1.X:7167/api'; // ← غيّر ده حسب عنوان السيرفر بتاعك
 
 // ── HTTP Helper ───────────────────────────────────────────────
 async function request(method, endpoint, body) {
