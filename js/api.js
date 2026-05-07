@@ -4,7 +4,7 @@
 // Works on all browsers + mobile
 // ============================================================
 
-var API_URL = 'http://192.168.1.X:7167/api'; // ← غيّر ده حسب عنوان السيرفر بتاعك
+var API_URL = 'https://localhost:7167/api';
 
 // ── HTTP Helper ───────────────────────────────────────────────
 async function request(method, endpoint, body) {
@@ -46,6 +46,18 @@ var API = {
         },
         me: function () {
             return request('GET', '/auth/me');
+        },
+    },
+
+    evaluations: {
+        get: function (groupId, date) {
+            return request('GET', '/evaluations?groupId=' + groupId + '&date=' + date);
+        },
+        save: function (body) {
+            return request('POST', '/evaluations', body);
+        },
+        getByStudent: function (id) {
+            return request('GET', '/evaluations/student/' + id);
         },
     },
 
