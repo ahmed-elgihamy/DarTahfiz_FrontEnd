@@ -663,12 +663,10 @@
           'الحلقة': g ? g.name : '',
           'التاريخ': dateRaw,
           'الحضور': statusMap[attMap[s.id]] || 'حاضر',
-
-          'الحفظ': ev ? mem + ' / 5' : '—',
-          'التجويد': ev ? taj + ' / 5' : '—',
-          'المراجعة': ev ? rev + ' / 5' : '—',
-
-          'المتوسط': ev ? avg : '—',
+          'الحفظ': ev ? String(mem) : '—',
+          'التجويد': ev ? String(taj) : '—',
+          'المراجعة': ev ? String(rev) : '—',
+          'المتوسط': ev ? String(avg) : '—',
           'ملاحظات': ev ? (ev.notes || ev.Notes || '') : '',
         };
       });
