@@ -13,6 +13,7 @@ async function request(method, endpoint, body) {
     if (token) headers['Authorization'] = 'Bearer ' + token;
 
     var options = { method: method, headers: headers };
+
     if (body !== undefined && body !== null) {
         options.body = JSON.stringify(body);
     }
@@ -26,8 +27,14 @@ async function request(method, endpoint, body) {
             return null;
         }
 
-        var data = await res.json();
-        return data;
+        var text = await res.text();
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('API returned non-JSON:', text);
+            throw new Error(text);
+        }
 
     } catch (err) {
         console.error('API Error:', err);
@@ -35,7 +42,6 @@ async function request(method, endpoint, body) {
         return null;
     }
 }
-
 // ── API ───────────────────────────────────────────────────────
 var API = {
 
