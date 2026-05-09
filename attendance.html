@@ -621,8 +621,6 @@
             var key = evalKey(e);
             evalMap[key] = e;
           });
-          console.log('evalMap keys:', Object.keys(evalMap));
-          console.log('student ids:', students.map(function (s) { return s.id.toLowerCase(); }));
         }
       } catch (err) { console.log('eval error:', err); }
 
@@ -645,7 +643,7 @@
           'الحفظ': ev ? mem + ' من 5' : '—',
           'التجويد': ev ? taj + ' من 5' : '—',
           'المراجعة': ev ? rev + ' من 5' : '—',
-          'المتوسط': ev ? avg + ' من 5' : '—',
+          'المتوسط': ev ? avg + '' : '—',
           'ملاحظات': ev ? (ev.notes || ev.Notes || '') : '',
         };
       });
@@ -793,16 +791,16 @@
       btn.disabled = true;
       btn.innerHTML = '<div class="spinner"></div>';
 
+
       var res = await API.evaluations.save({
         studentId: s.id,
         groupId: evalGroupId,
-        date: toUtcDate(evalDate),
+        date: new Date(evalDate + 'T00:00:00Z').toISOString(),
         memorization: evalScores.mem,
         tajweed: evalScores.taj,
         review: evalScores.rev,
-        notes: document.getElementById('eval-note').value,
+        notes: document.getElementById('eval-note').value || null
       });
-
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i><span id="eval-btn-text">حفظ والتالي</span>';
 
