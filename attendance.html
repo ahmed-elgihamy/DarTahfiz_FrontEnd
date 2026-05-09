@@ -513,12 +513,18 @@
     async function loadExisting() {
       var groupId = document.getElementById('sel-group').value;
       var date = document.getElementById('sel-date').value;
+
       if (!groupId || !date || !students.length) return;
-      var res = await API.attendance.get(groupId, date);
-      if (res && res.success) {
+
+      var res = await API.attendance.get(
+        groupId,
+        toUtcDate(date)
+      );
+
+      if (res && res.success && Array.isArray(res.data)) {
         res.data.forEach(function (a) {
-          var sid = (a.studentId || a.StudentId || '').toString();
-          attMap[sid] = a.status || a.Status;
+          var sid = (a.studentId || '').toString();
+          attMap[sid] = a.status || 'Present';
         });
         renderList();
       }

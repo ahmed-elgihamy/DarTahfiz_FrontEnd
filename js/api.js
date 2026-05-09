@@ -36,7 +36,10 @@ async function request(method, endpoint, body) {
         return null;
     }
 }
-
+async function toUtcDate(dateStr) {
+    if (!dateStr) return null;
+    return new Date(dateStr + 'T00:00:00Z').toISOString();
+}
 // ── API ───────────────────────────────────────────────────────
 var API = {
 
@@ -139,8 +142,12 @@ var API = {
 
     // ── Attendance ────────────────────────────────────────────
     attendance: {
+
         get: function (groupId, date) {
-            return request('GET', '/attendance?groupId=' + groupId + '&date=' + date);
+            return request(
+                'GET',
+                '/attendance?groupId=' + groupId + '&date=' + encodeURIComponent(date)
+            );
         },
         bulk: function (body) {
             return request('POST', '/attendance/bulk', body);
