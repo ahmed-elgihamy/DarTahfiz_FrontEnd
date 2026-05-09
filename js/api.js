@@ -4,7 +4,7 @@
 // Works on all browsers + mobile
 // ============================================================
 
-var API_URL = 'https://localhost:7167/api';
+var API_URL = 'insightful-reprieve-production-39ee.up.railway.app';
 
 // ── HTTP Helper ───────────────────────────────────────────────
 async function request(method, endpoint, body) {
