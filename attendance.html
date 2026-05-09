@@ -607,7 +607,7 @@
     // ── Export ────────────────────────────────────────────────
     async function exportSheet() {
       if (!students.length) { Toast.error('لا توجد بيانات'); return; }
-      var date = document.getElementById('sel-date').value;
+      var date = toUtcDate(document.getElementById('sel-date').value);
       var groupId = document.getElementById('sel-group').value;
       var g = null;
       allGroups.forEach(function (x) { if (x.id === groupId) g = x; });
@@ -796,7 +796,7 @@
       var res = await API.evaluations.save({
         studentId: s.id,
         groupId: evalGroupId,
-        date: evalDate,
+        date: toUtcDate(evalDate),
         memorization: evalScores.mem,
         tajweed: evalScores.taj,
         review: evalScores.rev,
