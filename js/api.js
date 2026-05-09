@@ -96,22 +96,7 @@ var API = {
             return request('DELETE', '/groups/' + id);
         },
     },
-    request: async function (url, options) {
-        options = options || {};
 
-        options.headers = options.headers || {};
-
-        options.headers['Authorization'] =
-            'Bearer ' + localStorage.getItem('token');
-
-        if (!options.headers['Content-Type']) {
-            options.headers['Content-Type'] = 'application/json';
-        }
-
-        var res = await fetch(this.baseUrl + url, options);
-
-        return await res.json();
-    },
     // ── Students ──────────────────────────────────────────────
     students: {
         getAll: function (groupId) {

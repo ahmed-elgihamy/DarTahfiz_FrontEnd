@@ -446,9 +446,9 @@
       grid.innerHTML = html.join('');
     }
 
-
     // ── Toggle Salary ─────────────────────────────────────────
     async function doToggle(id) {
+
       var teacher = null;
       var idx = -1;
 
@@ -472,48 +472,70 @@
         btn.innerHTML =
           '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div>';
       }
+
       try {
 
-        var res = await fetch(
-          API_BASE + '/teachers/' + id + '/salary/toggle',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('token')
-            }
+        var data = await API.teachers.toggleSalary(id);
+
+        if (data && data.success) {
+
+          teachers[idx].salaryPaid = !teachers[idx].salaryPaid;
+
+          var newPaid = teachers[idx].salaryPaid;
+
+          var statusCell = document.getElementById('status-cell-' + id);
+
+          if (statusCell) {
+            statusCell.innerHTML =
+              '<div class="tcs-val">' + (newPaid ? '✅' : '⏳') + '</div>' +
+              '<div class="tcs-lbl">الراتب</div>';
           }
-        );
 
-        var data = await res.json();
+          if (btn) {
+            btn.disabled = false;
+            btn.className =
+              'btn btn-sm ' + (newPaid ? 'btn-outline' : 'btn-gold');
 
-        if (data.success) {
-          Toast.success('تم تغيير حالة الراتب');
-          loadData();
+            btn.title =
+              newPaid ? 'إلغاء صرف الراتب' : 'صرف الراتب';
+
+            btn.innerHTML = newPaid
+              ? '<i class="fa-solid fa-rotate-left"></i>'
+              : '<i class="fa-solid fa-money-bill-wave"></i>';
+          }
+
+          updateStats();
+
+          Toast.success(
+            newPaid
+              ? '✅ تم صرف الراتب'
+              : '↩️ تم إلغاء صرف الراتب'
+          );
+
         } else {
-          Toast.error(data.message || 'حدث خطأ');
+
+          Toast.error(
+            (data && data.message)
+              ? data.message
+              : 'حدث خطأ'
+          );
+
+          if (btn) {
+            btn.disabled = false;
+          }
         }
 
       } catch (err) {
+
         console.log(err);
+
         Toast.error('فشل الاتصال بالسيرفر');
+
+        if (btn) {
+          btn.disabled = false;
+        }
       }
     }
-    Toast.error('حدث خطأ أثناء الاتصال بالسيرفر');
-
-    if (btn) {
-
-      btn.disabled = false;
-
-      btn.className =
-        'btn btn-sm ' + (teacher.salaryPaid ? 'btn-outline' : 'btn-gold');
-
-      btn.innerHTML = teacher.salaryPaid
-        ? '<i class="fa-solid fa-rotate-left"></i>'
-        : '<i class="fa-solid fa-money-bill-wave"></i>';
-    }
-
-
     // ── Add ───────────────────────────────────────────────────
     function openAdd() {
       editId = null;
