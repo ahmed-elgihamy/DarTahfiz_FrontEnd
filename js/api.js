@@ -40,6 +40,12 @@ async function toUtcDate(dateStr) {
     if (!dateStr) return null;
     return new Date(dateStr + 'T00:00:00Z').toISOString();
 }
+function cleanScore(v) {
+    if (v === null || v === undefined) return 0;
+    var n = Number(v);
+    if (isNaN(n)) return 0;
+    return n;
+}
 // ── API ───────────────────────────────────────────────────────
 var API = {
 

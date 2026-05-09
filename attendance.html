@@ -652,9 +652,9 @@
         var key = s.id.toString().toLowerCase().trim();
         var ev = evalMap[key];
 
-        var mem = ev ? safeNum(ev.memorization || ev.Memorization) : 0;
-        var taj = ev ? safeNum(ev.tajweed || ev.Tajweed) : 0;
-        var rev = ev ? safeNum(ev.review || ev.Review) : 0;
+        var mem = ev ? cleanScore(ev.memorization ?? ev.Memorization) : 0;
+        var taj = ev ? cleanScore(ev.tajweed ?? ev.Tajweed) : 0;
+        var rev = ev ? cleanScore(ev.review ?? ev.Review) : 0;
 
         var avg = ev ? ((mem + taj + rev) / 3).toFixed(1) : '';
 
