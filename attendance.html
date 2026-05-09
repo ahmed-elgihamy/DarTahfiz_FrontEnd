@@ -652,29 +652,48 @@
 
       Excel.export(data, 'كشف_الحضور_' + date);
     }
-
     async function loadReport() {
       var groupId = document.getElementById('rep-group').value;
       var from = document.getElementById('rep-from').value;
       var to = document.getElementById('rep-to').value;
+
       Loading.show();
-      var res = await API.attendance.report(groupId || undefined, from, to);
+
+      var res = await API.attendance.report(groupId || null, from, to);
+
       Loading.hide();
-      if (!res || !res.success) { Toast.error('حدث خطأ'); return; }
-      reportData = res.data;
-      if (!reportData.length) {
-        document.getElementById('report-tbody').innerHTML = '<tr><td colspan="6"><div class="empty-state" style="padding:30px"><i class="fa-solid fa-chart-bar"></i><p>لا توجد بيانات</p></div></td></tr>';
+
+      // 🔥 SAFE CHECK
+      if (!res || !res.success || !Array.isArray(res.data)) {
+        console.log('Invalid report response:', res);
+        Toast.error('خطأ في تحميل التقرير');
         return;
       }
+
+      reportData = res.data;
+
+      if (reportData.length === 0) {
+        document.getElementById('report-tbody').innerHTML =
+          '<tr><td colspan="6">لا توجد بيانات</td></tr>';
+        return;
+      }
+
       document.getElementById('report-tbody').innerHTML = reportData.map(function (r, i) {
-        var pct = Math.round(r.percent), color = Format.attColor(r.percent);
-        var bc = r.percent >= 80 ? 'badge-green' : r.percent >= 60 ? 'badge-gold' : 'badge-red';
-        var ic = r.percent >= 80 ? 'circle-check' : r.percent >= 60 ? 'triangle-exclamation' : 'circle-xmark';
-        var lb = r.percent >= 80 ? 'منتظم' : r.percent >= 60 ? 'متذبذب' : 'خطر';
-        return '<tr class="fade-up" style="animation-delay:' + (i * 0.03) + 's"><td><strong>' + r.studentName + '</strong></td><td><span class="badge badge-green">' + r.presentDays + '</span></td><td><span class="badge badge-red">' + r.absentDays + '</span></td><td><span class="badge badge-gold">' + r.lateDays + '</span></td><td><div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;background:' + color + '"></div></div><span style="font-size:.74rem;font-weight:700;color:' + color + '">' + pct + '%</span></div></td><td><span class="badge ' + bc + '"><i class="fa-solid fa-' + ic + '"></i> ' + lb + '</span></td></tr>';
+        var pct = Math.round(r.percent);
+        var color = Format.attColor(r.percent);
+
+        return `
+        <tr>
+            <td><strong>${r.studentName}</strong></td>
+            <td>${r.presentDays}</td>
+            <td>${r.absentDays}</td>
+            <td>${r.lateDays}</td>
+            <td>${pct}%</td>
+            <td>${pct >= 80 ? 'منتظم' : pct >= 60 ? 'متذبذب' : 'خطر'}</td>
+        </tr>
+        `;
       }).join('');
     }
-
     function exportReport() {
       if (!reportData.length) { Toast.error('اضغط بحث أولاً'); return; }
       Excel.exportAttendanceReport(reportData);
