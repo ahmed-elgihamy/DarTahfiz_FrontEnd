@@ -446,75 +446,119 @@
       grid.innerHTML = html.join('');
     }
 
+
     // ── Toggle Salary ─────────────────────────────────────────
     async function doToggle(id) {
       var teacher = null;
       var idx = -1;
+
       for (var i = 0; i < teachers.length; i++) {
-        if (teachers[i].id === id) { teacher = teachers[i]; idx = i; break; }
+        if (teachers[i].id === id) {
+          teacher = teachers[i];
+          idx = i;
+          break;
+        }
       }
-      if (!teacher) { Toast.error('المعلم غير موجود'); return; }
+
+      if (!teacher) {
+        Toast.error('المعلم غير موجود');
+        return;
+      }
 
       var btn = document.getElementById('sal-btn-' + id);
-      if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div>'; }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML =
+          '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div>';
+      }
 
       try {
-        var token = localStorage.getItem('token');
-        var res = await fetch('https://localhost:7167/api/teachers/' + id + '/salary/toggle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-          body: JSON.stringify({})
+
+        // استخدم API BASE من api.js
+        var res = await API.request('/teachers/' + id + '/salary/toggle', {
+          method: 'POST'
         });
 
-        var data = await res.json();
+        if (res && res.success) {
 
-        if (data && data.success) {
           // عكس القيمة
           teachers[idx].salaryPaid = !teachers[idx].salaryPaid;
+
           var newPaid = teachers[idx].salaryPaid;
 
-          // حدّث الـ UI مباشرة بدون re-render
+          // تحديث حالة الراتب
           var statusCell = document.getElementById('status-cell-' + id);
+
           if (statusCell) {
             statusCell.innerHTML =
               '<div class="tcs-val">' + (newPaid ? '✅' : '⏳') + '</div>' +
               '<div class="tcs-lbl">الراتب</div>';
           }
 
+          // تحديث الزر
           if (btn) {
+
             btn.disabled = false;
-            btn.className = 'btn btn-sm ' + (newPaid ? 'btn-outline' : 'btn-gold');
-            btn.title = newPaid ? 'إلغاء صرف الراتب' : 'صرف الراتب';
+
+            btn.className =
+              'btn btn-sm ' + (newPaid ? 'btn-outline' : 'btn-gold');
+
+            btn.title =
+              newPaid ? 'إلغاء صرف الراتب' : 'صرف الراتب';
+
             btn.innerHTML = newPaid
               ? '<i class="fa-solid fa-rotate-left"></i>'
               : '<i class="fa-solid fa-money-bill-wave"></i>';
           }
 
           updateStats();
-          Toast.success(newPaid ? '✅ تم صرف الراتب' : '↩️ تم إلغاء صرف الراتب');
+
+          Toast.success(
+            newPaid
+              ? '✅ تم صرف الراتب'
+              : '↩️ تم إلغاء صرف الراتب'
+          );
 
         } else {
-          Toast.error('فشل: ' + (data && data.message ? data.message : 'خطأ غير معروف'));
+
+          Toast.error(
+            (res && res.message)
+              ? res.message
+              : 'فشل تغيير حالة الراتب'
+          );
+
           if (btn) {
             btn.disabled = false;
-            btn.className = 'btn btn-sm ' + (teacher.salaryPaid ? 'btn-outline' : 'btn-gold');
+
+            btn.className =
+              'btn btn-sm ' + (teacher.salaryPaid ? 'btn-outline' : 'btn-gold');
+
             btn.innerHTML = teacher.salaryPaid
               ? '<i class="fa-solid fa-rotate-left"></i>'
               : '<i class="fa-solid fa-money-bill-wave"></i>';
           }
         }
+
       } catch (err) {
-        Toast.error('خطأ: ' + err.message);
+
+        console.log(err);
+
+        Toast.error('حدث خطأ أثناء الاتصال بالسيرفر');
+
         if (btn) {
+
           btn.disabled = false;
-          btn.className = 'btn btn-sm ' + (teacher.salaryPaid ? 'btn-outline' : 'btn-gold');
+
+          btn.className =
+            'btn btn-sm ' + (teacher.salaryPaid ? 'btn-outline' : 'btn-gold');
+
           btn.innerHTML = teacher.salaryPaid
             ? '<i class="fa-solid fa-rotate-left"></i>'
             : '<i class="fa-solid fa-money-bill-wave"></i>';
         }
       }
     }
-
     // ── Add ───────────────────────────────────────────────────
     function openAdd() {
       editId = null;
