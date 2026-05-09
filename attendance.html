@@ -578,10 +578,15 @@
       btn.innerHTML = '<div class="spinner"></div>';
 
       var res = await API.attendance.bulk({
-        groupId: groupId, date: date,
-        entries: students.map(function (s) { return { studentId: s.id, status: attMap[s.id] || 'Present' }; })
+        groupId: groupId,
+        date: new Date(date).toISOString(),
+        entries: students.map(function (s) {
+          return {
+            studentId: s.id,
+            status: attMap[s.id] || 'Present'
+          };
+        })
       });
-
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ الحضور';
 

@@ -7,13 +7,13 @@
 var API_URL = 'https://insightful-reprieve-production-39ee.up.railway.app/api';
 
 // ── HTTP Helper ───────────────────────────────────────────────
+
 async function request(method, endpoint, body) {
     var token = localStorage.getItem('token');
     var headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = 'Bearer ' + token;
 
     var options = { method: method, headers: headers };
-
     if (body !== undefined && body !== null) {
         options.body = JSON.stringify(body);
     }
@@ -27,14 +27,8 @@ async function request(method, endpoint, body) {
             return null;
         }
 
-        var text = await res.text();
-
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('API returned non-JSON:', text);
-            throw new Error(text);
-        }
+        var data = await res.json();
+        return data;
 
     } catch (err) {
         console.error('API Error:', err);
@@ -42,6 +36,7 @@ async function request(method, endpoint, body) {
         return null;
     }
 }
+
 // ── API ───────────────────────────────────────────────────────
 var API = {
 
