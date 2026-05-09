@@ -606,49 +606,74 @@
 
     // ── Export ────────────────────────────────────────────────
     async function exportSheet() {
-      if (!students.length) { Toast.error('لا توجد بيانات'); return; }
-      var date = toUtcDate(document.getElementById('sel-date').value);
-      var groupId = document.getElementById('sel-group').value;
-      var g = null;
-      allGroups.forEach(function (x) { if (x.id === groupId) g = x; });
+      if (!students.length) {
+        Toast.error('لا توجد بيانات');
+        return;
+      }
 
-      // جيب التقييمات
+      var dateRaw = document.getElementById('sel-date').value;
+      var groupId = document.getElementById('sel-group').value;
+
+      var g = null;
+      allGroups.forEach(function (x) {
+        if (x.id === groupId) g = x;
+      });
+
+      // 🔥 استخدم نفس شكل التاريخ اللي في DB (مش ISO)
+      var date = dateRaw;
+
       var evalMap = {};
+
       try {
         var evRes = await API.evaluations.get(groupId, date);
-        if (evRes && evRes.success && evRes.data && evRes.data.length) {
+
+        if (evRes && evRes.success && Array.isArray(evRes.data)) {
           evRes.data.forEach(function (e) {
-            var key = evalKey(e);
+
+            // 🔥 أهم تعديل هنا: توحيد الـ key
+            var key = (e.studentId || '').toString().toLowerCase().trim();
+
             evalMap[key] = e;
           });
         }
-      } catch (err) { console.log('eval error:', err); }
 
-      var statusMap = { Present: 'حاضر', Absent: 'غائب', Late: 'متأخر' };
+      } catch (err) {
+        console.log('eval error:', err);
+      }
+
+      var statusMap = {
+        Present: 'حاضر',
+        Absent: 'غائب',
+        Late: 'متأخر'
+      };
 
       var data = students.map(function (s) {
+
         var key = s.id.toString().toLowerCase().trim();
         var ev = evalMap[key];
 
         var mem = ev ? safeNum(ev.memorization || ev.Memorization) : 0;
         var taj = ev ? safeNum(ev.tajweed || ev.Tajweed) : 0;
         var rev = ev ? safeNum(ev.review || ev.Review) : 0;
+
         var avg = ev ? ((mem + taj + rev) / 3).toFixed(1) : '';
 
         return {
           'الطالب': s.fullName,
           'الحلقة': g ? g.name : '',
-          'التاريخ': date,
+          'التاريخ': dateRaw,
           'الحضور': statusMap[attMap[s.id]] || 'حاضر',
-          'الحفظ': ev ? mem + ' من 5' : '—',
-          'التجويد': ev ? taj + ' من 5' : '—',
-          'المراجعة': ev ? rev + ' من 5' : '—',
-          'المتوسط': ev ? avg + '' : '—',
+
+          'الحفظ': ev ? mem + ' / 5' : '—',
+          'التجويد': ev ? taj + ' / 5' : '—',
+          'المراجعة': ev ? rev + ' / 5' : '—',
+
+          'المتوسط': ev ? avg : '—',
           'ملاحظات': ev ? (ev.notes || ev.Notes || '') : '',
         };
       });
 
-      Excel.export(data, 'كشف_الحضور_' + date);
+      Excel.export(data, 'كشف_الحضور_' + dateRaw);
     }
     async function loadReport() {
       var groupId = document.getElementById('rep-group').value;
