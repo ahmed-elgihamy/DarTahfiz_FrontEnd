@@ -272,12 +272,15 @@
             </button>
           </div>
         </div>
+
         <div class="tabs fade-up">
           <button class="tab-btn active" onclick="showTab('sheet',this)"><i class="fa-solid fa-clipboard-list"></i> كشف
             الحضور</button>
           <button class="tab-btn" onclick="showTab('report',this)"><i class="fa-solid fa-chart-bar"></i> تقرير
             الغياب</button>
         </div>
+
+        <!-- SHEET -->
         <div id="tab-sheet">
           <div class="card fade-up">
             <div class="card-body" style="padding:14px 18px">
@@ -292,7 +295,7 @@
                 <div style="display:flex;align-items:center;gap:8px">
                   <label style="font-size:.75rem;font-weight:700;color:var(--muted);white-space:nowrap"><i
                       class="fa-solid fa-calendar"></i> التاريخ</label>
-                  <input type="date" class="filter-sel" id="sel-date" onchange="loadExisting()">
+                  <input type="date" class="filter-sel" id="sel-date" onchange="onDateChange()">
                 </div>
                 <div class="att-summary" id="att-summary" style="display:none">
                   <div class="att-pill p"><i class="fa-solid fa-circle-check"></i> <span id="cnt-p">0</span> حاضر</div>
@@ -310,11 +313,13 @@
               </div>
             </div>
           </div>
+
           <div class="empty-state fade-up" id="no-group">
             <i class="fa-solid fa-layer-group"></i>
             <h3>اختر الحلقة أولاً</h3>
             <p>اختر الحلقة والتاريخ لتسجيل الحضور</p>
           </div>
+
           <div class="card fade-up" id="att-card" style="display:none">
             <div class="card-header">
               <div class="card-title" id="att-title"><i class="fa-solid fa-users"></i> كشف الحضور</div>
@@ -323,6 +328,8 @@
             <div id="att-list"></div>
           </div>
         </div>
+
+        <!-- REPORT -->
         <div id="tab-report" style="display:none">
           <div class="card fade-up">
             <div class="card-body" style="padding:14px 18px">
@@ -369,6 +376,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </main>
   </div>
@@ -410,7 +418,7 @@
       <div
         style="background:var(--surface);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:.78rem;color:var(--muted)">المتوسط</span>
-        <strong id="eval-avg" style="color:var(--green);font-size:1rem">3.0 / 5</strong>
+        <strong id="eval-avg" style="color:var(--green);font-size:1rem">3.0 من 5</strong>
       </div>
       <div class="eval-section">
         <div class="eval-label"><i class="fa-solid fa-note-sticky" style="color:var(--muted)"></i> ملاحظة (اختياري)
@@ -440,17 +448,27 @@
     var attMap = {};
     var reportData = [];
 
-    // ── Safe number extract ────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────
     function safeNum(val) {
       var n = parseInt(val, 10);
       return isNaN(n) ? 0 : n;
     }
 
-    // ── Get studentId key ──────────────────────────────────────
+    function cleanScore(val) {
+      var n = parseInt(val, 10);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function toUtcDate(dateStr) {
+      // Convert "2026-05-20" to "2026-05-20T00:00:00Z"
+      return dateStr + 'T00:00:00Z';
+    }
+
     function evalKey(e) {
       return (e.studentId || e.StudentId || '').toString().toLowerCase().trim();
     }
 
+    // ── Init ─────────────────────────────────────────────────
     async function init() {
       var today = new Date().toISOString().split('T')[0];
       document.getElementById('sel-date').value = today;
@@ -476,6 +494,13 @@
       btn.classList.add('active');
     }
 
+    function onDateChange() {
+      if (students.length > 0) {
+        loadExisting().then(function () { renderList(); });
+      }
+    }
+
+    // ── Load Students ─────────────────────────────────────────
     async function loadStudents() {
       var groupId = document.getElementById('sel-group').value;
       if (!groupId) {
@@ -485,6 +510,7 @@
         document.getElementById('eval-trigger').style.display = 'none';
         return;
       }
+
       Loading.show();
       var res = await API.students.getAll(groupId);
       Loading.hide();
@@ -492,7 +518,6 @@
 
       students = res.data;
       attMap = {};
-      // students.forEach(function (s) { attMap[s.id] = 'Present'; });
 
       var g = null;
       allGroups.forEach(function (x) { if (x.id === groupId) g = x; });
@@ -506,10 +531,12 @@
         ' — ' + document.getElementById('sel-date').value;
       document.getElementById('att-count').textContent = students.length + ' طالب';
       document.getElementById('att-summary').style.display = '';
+
       await loadExisting();
       renderList();
     }
 
+    // ── Load Existing Attendance ──────────────────────────────
     async function loadExisting() {
       var groupId = document.getElementById('sel-group').value;
       var date = document.getElementById('sel-date').value;
@@ -522,23 +549,22 @@
       var res = await API.attendance.get(groupId, toUtcDate(date));
 
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        // حمّل الحضور المحفوظ
         res.data.forEach(function (a) {
-          var sid = (a.studentId || a.StudentId || '').toString();
+          var sid = (a.studentId || a.StudentId || '').toString().trim();
           attMap[sid] = a.status || a.Status || 'Present';
         });
+        // لو طالب مش في الحضور المحفوظ — خليه Present
         students.forEach(function (s) {
           if (!attMap[s.id]) attMap[s.id] = 'Present';
         });
       } else {
+        // مفيش حضور محفوظ ليوم ده — خلي الكل Present
         students.forEach(function (s) { attMap[s.id] = 'Present'; });
       }
-
-      API.attendance.get(
-        document.getElementById('sel-group').value,
-        new Date(document.getElementById('sel-date').value + 'T00:00:00Z').toISOString()
-      ).then(function (r) { console.log(JSON.stringify(r.data)); });
     }
 
+    // ── Render ────────────────────────────────────────────────
     function renderList() {
       updateSummary();
       document.getElementById('att-list').innerHTML = students.map(function (s) {
@@ -583,6 +609,7 @@
       renderList();
     }
 
+    // ── Save ──────────────────────────────────────────────────
     async function saveAttendance() {
       var groupId = document.getElementById('sel-group').value;
       var date = document.getElementById('sel-date').value;
@@ -594,14 +621,12 @@
 
       var res = await API.attendance.bulk({
         groupId: groupId,
-        date: new Date(date).toISOString(),
+        date: toUtcDate(date),
         entries: students.map(function (s) {
-          return {
-            studentId: s.id,
-            status: attMap[s.id] || 'Present'
-          };
+          return { studentId: s.id, status: attMap[s.id] || 'Present' };
         })
       });
+
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ الحضور';
 
@@ -615,58 +640,33 @@
 
     // ── Export ────────────────────────────────────────────────
     async function exportSheet() {
-      if (!students.length) {
-        Toast.error('لا توجد بيانات');
-        return;
-      }
+      if (!students.length) { Toast.error('لا توجد بيانات'); return; }
 
       var dateRaw = document.getElementById('sel-date').value;
       var groupId = document.getElementById('sel-group').value;
-
       var g = null;
-      allGroups.forEach(function (x) {
-        if (x.id === groupId) g = x;
-      });
-
-      // 🔥 استخدم نفس شكل التاريخ اللي في DB (مش ISO)
-      var date = dateRaw;
+      allGroups.forEach(function (x) { if (x.id === groupId) g = x; });
 
       var evalMap = {};
-
       try {
-        var evRes = await API.evaluations.get(groupId, date);
-
+        var evRes = await API.evaluations.get(groupId, toUtcDate(dateRaw));
         if (evRes && evRes.success && Array.isArray(evRes.data)) {
           evRes.data.forEach(function (e) {
-
-            // 🔥 أهم تعديل هنا: توحيد الـ key
             var key = (e.studentId || '').toString().toLowerCase().trim();
-
             evalMap[key] = e;
           });
         }
+      } catch (err) { }
 
-      } catch (err) {
-        console.log('eval error:', err);
-      }
-
-      var statusMap = {
-        Present: 'حاضر',
-        Absent: 'غائب',
-        Late: 'متأخر'
-      };
+      var statusMap = { Present: 'حاضر', Absent: 'غائب', Late: 'متأخر' };
 
       var data = students.map(function (s) {
-
         var key = s.id.toString().toLowerCase().trim();
         var ev = evalMap[key];
-
-        var mem = ev ? cleanScore(ev.memorization ?? ev.Memorization) : 0;
-        var taj = ev ? cleanScore(ev.tajweed ?? ev.Tajweed) : 0;
-        var rev = ev ? cleanScore(ev.review ?? ev.Review) : 0;
-
+        var mem = ev ? cleanScore(ev.memorization || ev.Memorization) : 0;
+        var taj = ev ? cleanScore(ev.tajweed || ev.Tajweed) : 0;
+        var rev = ev ? cleanScore(ev.review || ev.Review) : 0;
         var avg = ev ? ((mem + taj + rev) / 3).toFixed(1) : '';
-
         return {
           'الطالب': s.fullName,
           'الحلقة': g ? g.name : '',
@@ -682,48 +682,52 @@
 
       Excel.export(data, 'كشف_الحضور_' + dateRaw);
     }
+
+    // ── Report ────────────────────────────────────────────────
     async function loadReport() {
       var groupId = document.getElementById('rep-group').value;
       var from = document.getElementById('rep-from').value;
       var to = document.getElementById('rep-to').value;
 
       Loading.show();
-
       var res = await API.attendance.report(groupId || null, from, to);
-
       Loading.hide();
 
-      // 🔥 SAFE CHECK
       if (!res || !res.success || !Array.isArray(res.data)) {
-        console.log('Invalid report response:', res);
         Toast.error('خطأ في تحميل التقرير');
         return;
       }
 
       reportData = res.data;
 
-      if (reportData.length === 0) {
+      if (!reportData.length) {
         document.getElementById('report-tbody').innerHTML =
-          '<tr><td colspan="6">لا توجد بيانات</td></tr>';
+          '<tr><td colspan="6"><div class="empty-state" style="padding:30px"><i class="fa-solid fa-chart-bar"></i><p>لا توجد بيانات</p></div></td></tr>';
         return;
       }
 
       document.getElementById('report-tbody').innerHTML = reportData.map(function (r, i) {
         var pct = Math.round(r.percent);
         var color = Format.attColor(r.percent);
-
-        return `
-        <tr>
-            <td><strong>${r.studentName}</strong></td>
-            <td>${r.presentDays}</td>
-            <td>${r.absentDays}</td>
-            <td>${r.lateDays}</td>
-            <td>${pct}%</td>
-            <td>${pct >= 80 ? 'منتظم' : pct >= 60 ? 'متذبذب' : 'خطر'}</td>
-        </tr>
-        `;
+        var badgeCls = pct >= 80 ? 'badge-green' : pct >= 60 ? 'badge-gold' : 'badge-red';
+        var ico = pct >= 80 ? 'circle-check' : pct >= 60 ? 'triangle-exclamation' : 'circle-xmark';
+        var label = pct >= 80 ? 'منتظم' : pct >= 60 ? 'متذبذب' : 'خطر';
+        return (
+          '<tr class="fade-up" style="animation-delay:' + (i * 0.03) + 's">' +
+          '<td><strong>' + r.studentName + '</strong></td>' +
+          '<td><span class="badge badge-green">' + r.presentDays + '</span></td>' +
+          '<td><span class="badge badge-red">' + r.absentDays + '</span></td>' +
+          '<td><span class="badge badge-gold">' + r.lateDays + '</span></td>' +
+          '<td><div class="progress-wrap">' +
+          '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+          '<span style="font-size:.74rem;font-weight:700;color:' + color + '">' + pct + '%</span>' +
+          '</div></td>' +
+          '<td><span class="badge ' + badgeCls + '"><i class="fa-solid fa-' + ico + '"></i> ' + label + '</span></td>' +
+          '</tr>'
+        );
       }).join('');
     }
+
     function exportReport() {
       if (!reportData.length) { Toast.error('اضغط بحث أولاً'); return; }
       Excel.exportAttendanceReport(reportData);
@@ -751,7 +755,7 @@
       var existingNote = '';
 
       try {
-        var res = await API.evaluations.get(evalGroupId, evalDate);
+        var res = await API.evaluations.get(evalGroupId, toUtcDate(evalDate));
         if (res && res.success && res.data) {
           res.data.forEach(function (e) {
             if (evalKey(e) === studentId.toLowerCase().trim()) {
@@ -772,13 +776,14 @@
 
     function triggerEval() {
       var groupId = document.getElementById('sel-group').value;
-      var date = document.getElementById('sel-date').value;
       if (!groupId) { Toast.error('اختر الحلقة أولاً'); return; }
-      evalStudents = students.filter(function (s) { return attMap[s.id] === 'Present' || attMap[s.id] === 'Late'; });
+      evalStudents = students.filter(function (s) {
+        return attMap[s.id] === 'Present' || attMap[s.id] === 'Late';
+      });
       if (!evalStudents.length) { Toast.error('لا يوجد طلاب حاضرون'); return; }
       evalIndex = 0;
       evalGroupId = groupId;
-      evalDate = date;
+      evalDate = document.getElementById('sel-date').value;
       evalScores = { mem: 3, taj: 3, rev: 3 };
       showEvalPopup();
     }
@@ -823,16 +828,16 @@
       btn.disabled = true;
       btn.innerHTML = '<div class="spinner"></div>';
 
-
       var res = await API.evaluations.save({
         studentId: s.id,
         groupId: evalGroupId,
-        date: new Date(evalDate + 'T00:00:00Z').toISOString(),
+        date: toUtcDate(evalDate),
         memorization: evalScores.mem,
         tajweed: evalScores.taj,
         review: evalScores.rev,
-        notes: document.getElementById('eval-note').value || null
+        notes: document.getElementById('eval-note').value || null,
       });
+
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i><span id="eval-btn-text">حفظ والتالي</span>';
 
