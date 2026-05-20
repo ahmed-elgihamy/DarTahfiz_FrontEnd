@@ -492,7 +492,7 @@
 
       students = res.data;
       attMap = {};
-      students.forEach(function (s) { attMap[s.id] = 'Present'; });
+      // students.forEach(function (s) { attMap[s.id] = 'Present'; });
 
       var g = null;
       allGroups.forEach(function (x) { if (x.id === groupId) g = x; });
@@ -514,19 +514,23 @@
       var groupId = document.getElementById('sel-group').value;
       var date = document.getElementById('sel-date').value;
 
-      if (!groupId || !date || !students.length) return;
+      if (!groupId || !date || !students.length) {
+        students.forEach(function (s) { attMap[s.id] = 'Present'; });
+        return;
+      }
 
-      var res = await API.attendance.get(
-        groupId,
-        toUtcDate(date)
-      );
+      var res = await API.attendance.get(groupId, toUtcDate(date));
 
-      if (res && res.success && Array.isArray(res.data)) {
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         res.data.forEach(function (a) {
-          var sid = (a.studentId || '').toString();
-          attMap[sid] = a.status || 'Present';
+          var sid = (a.studentId || a.StudentId || '').toString();
+          attMap[sid] = a.status || a.Status || 'Present';
         });
-        renderList();
+        students.forEach(function (s) {
+          if (!attMap[s.id]) attMap[s.id] = 'Present';
+        });
+      } else {
+        students.forEach(function (s) { attMap[s.id] = 'Present'; });
       }
     }
 
