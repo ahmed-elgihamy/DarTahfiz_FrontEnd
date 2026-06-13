@@ -193,6 +193,9 @@ var API = {
         generate: function (month, year) {
             return request('POST', '/payments/generate/' + month + '/' + year, {});
         },
+        update: function (id, body) {
+            return request('PUT', '/payments/' + id, body);
+        },
     },
 
     // ── Sessions ──────────────────────────────────────────────

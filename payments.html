@@ -15,7 +15,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 20px
     }
 
     .psc {
@@ -23,7 +23,7 @@
       padding: 20px;
       color: #fff;
       position: relative;
-      overflow: hidden;
+      overflow: hidden
     }
 
     .psc::before {
@@ -34,32 +34,32 @@
       width: 70px;
       height: 70px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .08)
     }
 
     .psc.g {
-      background: linear-gradient(135deg, var(--green), var(--green2));
+      background: linear-gradient(135deg, var(--green), var(--green2))
     }
 
     .psc.gold {
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      background: linear-gradient(135deg, var(--gold), var(--gold2))
     }
 
     .psc.b {
-      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      background: linear-gradient(135deg, var(--blue), var(--blue2))
     }
 
     .psc-val {
       font-size: 1.8rem;
       font-weight: 900;
       line-height: 1;
-      margin-bottom: 4px;
+      margin-bottom: 4px
     }
 
     .psc-lbl {
       font-size: .73rem;
       opacity: .82;
-      margin-bottom: 8px;
+      margin-bottom: 8px
     }
 
     .psc-bar {
@@ -67,28 +67,79 @@
       background: rgba(255, 255, 255, .22);
       border-radius: 2px;
       overflow: hidden;
-      margin-bottom: 4px;
+      margin-bottom: 4px
     }
 
     .psc-fill {
       height: 100%;
       background: rgba(255, 255, 255, .7);
       border-radius: 2px;
-      transition: width .5s;
+      transition: width .5s
     }
 
     .psc-sub {
       font-size: .7rem;
-      opacity: .7;
+      opacity: .7
     }
 
     .unpaid-row td:first-child {
-      border-right: 3px solid var(--gold2);
+      border-right: 3px solid var(--gold2)
+    }
+
+    .edit-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 24, 32, .55);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      padding: 16px
+    }
+
+    .edit-overlay.open {
+      display: flex
+    }
+
+    .edit-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, .3);
+      animation: popIn .3s cubic-bezier(.16, 1, .3, 1)
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(.85) translateY(20px);
+        opacity: 0
+      }
+
+      to {
+        transform: none;
+        opacity: 1
+      }
+    }
+
+    .edit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px
+    }
+
+    .edit-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px
     }
 
     @media(max-width:768px) {
       .pay-summary {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr
       }
     }
   </style>
@@ -102,47 +153,32 @@
       <div id="topbar-wrap"></div>
       <div class="page-content">
 
-        <!-- Header -->
         <div class="page-header fade-up">
           <div class="page-header-left">
             <h1><i class="fa-solid fa-money-bill-wave"></i> المدفوعات</h1>
             <p>تحصيل الرسوم ومتابعة المتأخرات</p>
           </div>
           <div class="page-header-actions">
-            <button class="btn btn-outline" onclick="generate()">
-              <i class="fa-solid fa-bolt"></i> فواتير الشهر
-            </button>
-            <button class="btn btn-outline" onclick="exportPay()">
-              <i class="fa-solid fa-file-excel"></i> Excel
-            </button>
-            <button class="btn btn-primary" onclick="Drawer.open('pay')">
-              <i class="fa-solid fa-plus"></i> تسجيل دفعة
-            </button>
+            <button class="btn btn-outline" onclick="generate()"><i class="fa-solid fa-bolt"></i> فواتير الشهر</button>
+            <button class="btn btn-outline" onclick="exportPay()"><i class="fa-solid fa-file-excel"></i> Excel</button>
+            <button class="btn btn-primary" onclick="Drawer.open('pay')"><i class="fa-solid fa-plus"></i> تسجيل
+              دفعة</button>
           </div>
         </div>
 
-        <!-- Summary Cards -->
         <div class="pay-summary fade-up" id="pay-sum">
           <div class="psc g skeleton" style="height:95px"></div>
           <div class="psc gold skeleton" style="height:95px"></div>
           <div class="psc b skeleton" style="height:95px"></div>
         </div>
 
-        <!-- Tabs -->
         <div class="tabs fade-up">
-          <button class="tab-btn active" onclick="setTab('all', this)">
-            <i class="fa-solid fa-list"></i> الكل
-          </button>
-          <button class="tab-btn" onclick="setTab('unpaid', this)">
-            <i class="fa-solid fa-clock"></i> لم يدفعوا
-            <span class="tab-count" id="unpaid-cnt">0</span>
-          </button>
-          <button class="tab-btn" onclick="setTab('paid', this)">
-            <i class="fa-solid fa-circle-check"></i> دفعوا
-          </button>
+          <button class="tab-btn active" onclick="setTab('all',this)"><i class="fa-solid fa-list"></i> الكل</button>
+          <button class="tab-btn" onclick="setTab('unpaid',this)"><i class="fa-solid fa-clock"></i> لم يدفعوا <span
+              class="tab-count" id="unpaid-cnt">0</span></button>
+          <button class="tab-btn" onclick="setTab('paid',this)"><i class="fa-solid fa-circle-check"></i> دفعوا</button>
         </div>
 
-        <!-- Filters -->
         <div class="toolbar fade-up">
           <select class="filter-sel" id="f-m" onchange="load()">
             <option value="">كل الشهور</option>
@@ -162,23 +198,19 @@
           <select class="filter-sel" id="f-y" onchange="load()">
             <option value="2024">2024</option>
             <option value="2025">2025</option>
-            <option value="2026">2026</option> <!-- ← أضف -->
-            <option value="2027">2027</option> <!-- ← أضف -->
-            <option value="2028">2028</option> <!-- ← أضف -->
-            <option value="2029">2029</option> <!-- ← أضف -->
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
           </select>
           <select class="filter-sel" id="f-g" onchange="load()">
             <option value="">كل الحلقات</option>
           </select>
         </div>
 
-        <!-- Table -->
         <div class="card fade-up">
           <div class="card-header">
-            <div class="card-title">
-              <i class="fa-solid fa-table-list"></i>
-              <span id="pay-cnt">المدفوعات</span>
-            </div>
+            <div class="card-title"><i class="fa-solid fa-table-list"></i> <span id="pay-cnt">المدفوعات</span></div>
           </div>
           <div class="table-wrap">
             <table>
@@ -212,9 +244,7 @@
   <div class="drawer" id="pay-drawer">
     <div class="drawer-head">
       <h2><i class="fa-solid fa-money-bill-wave"></i> تسجيل دفعة</h2>
-      <button class="drawer-close" onclick="Drawer.close('pay')">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+      <button class="drawer-close" onclick="Drawer.close('pay')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="drawer-body">
       <div class="form-group">
@@ -252,11 +282,10 @@
           <select class="form-control" id="f-py">
             <option value="2024">2024</option>
             <option value="2025">2025</option>
-            <option value="2026">2026</option> <!-- ← أضف -->
-            <option value="2027">2027</option> <!-- ← أضف -->
-            <option value="2028">2028</option> <!-- ← أضف -->
-            <option value="2029">2029</option> <!-- ← أضف -->
-
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
           </select>
         </div>
       </div>
@@ -270,12 +299,47 @@
       </div>
     </div>
     <div class="drawer-foot">
-      <button class="btn btn-ghost" onclick="Drawer.close('pay')">
-        <i class="fa-solid fa-xmark"></i> إلغاء
-      </button>
-      <button class="btn btn-gold" id="save-btn" onclick="savePay()">
-        <i class="fa-solid fa-floppy-disk"></i> تسجيل الدفع
-      </button>
+      <button class="btn btn-ghost" onclick="Drawer.close('pay')"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+      <button class="btn btn-gold" id="save-btn" onclick="savePay()"><i class="fa-solid fa-floppy-disk"></i> تسجيل
+        الدفع</button>
+    </div>
+  </div>
+
+  <!-- EDIT PAYMENT MODAL -->
+  <div class="edit-overlay" id="edit-overlay">
+    <div class="edit-box">
+      <div class="edit-header">
+        <div>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:2px">تعديل الدفعة</div>
+          <div style="font-weight:800;font-size:.95rem" id="edit-student-name">—</div>
+        </div>
+        <button class="drawer-close" onclick="closeEdit()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-money-bill"></i> المبلغ (جنيه)</label>
+        <input class="form-control" type="number" id="edit-amount">
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-circle-check"></i> حالة الدفع</label>
+        <select class="form-control" id="edit-status">
+          <option value="false">متأخر</option>
+          <option value="true">مدفوع</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-note-sticky"></i> ملاحظة</label>
+        <input class="form-control" id="edit-note" placeholder="اختياري...">
+      </div>
+
+      <div class="edit-footer">
+        <button class="btn btn-ghost" onclick="closeEdit()" style="min-width:80px">إلغاء</button>
+        <button class="btn btn-primary" id="edit-save-btn" style="flex:1;justify-content:center" onclick="saveEdit()">
+          <i class="fa-solid fa-floppy-disk"></i> حفظ التعديل
+        </button>
+      </div>
     </div>
   </div>
 
@@ -290,18 +354,21 @@
     var payments = [];
     var filtered = [];
     var tabFilter = 'all';
+    var editPayId = null;
 
     async function init() {
       var now = new Date();
-      // في init() غيّر
-      document.getElementById('f-y').value = now.getFullYear(); // ← 2026
-      document.getElementById('f-py').value = now.getFullYear(); // ← 2026
+      document.getElementById('f-y').value = now.getFullYear();
+      document.getElementById('f-py').value = now.getFullYear();
+      document.getElementById('f-m').value = now.getMonth() + 1;
+      document.getElementById('f-pm').value = now.getMonth() + 1;
+
       var gRes = await API.groups.getAll();
       if (gRes && gRes.success) {
         gRes.data.forEach(function (g) {
-          var opt1 = '<option value="' + g.id + '">' + g.name + '</option>';
-          document.getElementById('f-g').innerHTML += opt1;
-          document.getElementById('f-pg').innerHTML += opt1;
+          var opt = '<option value="' + g.id + '">' + g.name + '</option>';
+          document.getElementById('f-g').innerHTML += opt;
+          document.getElementById('f-pg').innerHTML += opt;
         });
       }
 
@@ -327,31 +394,26 @@
       if (g) params.groupId = g;
 
       Loading.show();
-
       var pRes = await API.payments.getAll(params);
       var sRes = await API.payments.summary(
         m ? parseInt(m) : new Date().getMonth() + 1,
-        y ? parseInt(y) : 2024
+        y ? parseInt(y) : new Date().getFullYear()
       );
-
       Loading.hide();
 
       if (pRes && pRes.success) {
         payments = pRes.data;
-        var unpaid = payments.filter(function (p) { return !p.isPaid; }).length;
-        document.getElementById('unpaid-cnt').textContent = unpaid;
+        document.getElementById('unpaid-cnt').textContent =
+          payments.filter(function (p) { return !p.isPaid; }).length;
         applyTab();
       }
 
-      if (sRes && sRes.success) {
-        renderSummary(sRes.data);
-      }
+      if (sRes && sRes.success) renderSummary(sRes.data);
     }
 
     function renderSummary(s) {
       var total = s.totalExpected || 1;
       var pct = Math.round(s.totalCollected / total * 100);
-
       document.getElementById('pay-sum').innerHTML =
         '<div class="psc g">' +
         '<div class="psc-lbl"><i class="fa-solid fa-circle-check"></i> المحصّل</div>' +
@@ -373,9 +435,7 @@
 
     function setTab(tab, btn) {
       tabFilter = tab;
-      document.querySelectorAll('.tab-btn').forEach(function (b) {
-        b.classList.remove('active');
-      });
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       applyTab();
     }
@@ -395,26 +455,23 @@
 
       if (!filtered.length) {
         tbody.innerHTML =
-          '<tr><td colspan="6">' +
-          '<div class="empty-state" style="padding:30px">' +
+          '<tr><td colspan="6"><div class="empty-state" style="padding:30px">' +
           '<i class="fa-solid fa-money-bill-wave"></i>' +
           '<h3>لا توجد بيانات</h3>' +
           '<p>جرب تغيير الفلاتر أو توليد فواتير الشهر</p>' +
-          '</div>' +
-          '</td></tr>';
+          '</div></td></tr>';
         return;
       }
 
-      var rows = filtered.map(function (p, i) {
-        var delay = (i * 0.02) + 's';
+      tbody.innerHTML = filtered.map(function (p, i) {
         var isPaid = p.isPaid;
-        var action = isPaid
+        var payBtn = isPaid
           ? '<span style="font-size:.72rem;color:var(--muted)"><i class="fa-solid fa-circle-check"></i> تم</span>'
           : '<button class="btn btn-gold btn-sm" onclick="markPaid(\'' + p.id + '\',\'' + p.studentName.replace(/'/g, '') + '\')">' +
-          '<i class="fa-solid fa-money-bill-wave"></i> دفع' +
-          '</button>';
+          '<i class="fa-solid fa-money-bill-wave"></i> دفع</button>';
 
-        return '<tr class="' + (isPaid ? '' : 'unpaid-row') + ' fade-up" style="animation-delay:' + delay + '">' +
+        return (
+          '<tr class="' + (isPaid ? '' : 'unpaid-row') + ' fade-up" style="animation-delay:' + (i * 0.02) + 's">' +
           '<td>' +
           '<div style="display:flex;align-items:center;gap:10px">' +
           '<div class="av ' + (isPaid ? 'av-green' : 'av-gold') + '">' + Format.initials(p.studentName) + '</div>' +
@@ -425,20 +482,86 @@
           '<td class="hide-mobile" style="font-size:.83rem">' + p.monthName + ' ' + p.year + '</td>' +
           '<td><strong>' + Format.number(p.amount) + ' ج</strong></td>' +
           '<td>' + Format.paidBadge(isPaid) + '</td>' +
-          '<td>' + action + '</td>' +
-          '</tr>';
-      });
-
-      tbody.innerHTML = rows.join('');
+          '<td>' +
+          '<div style="display:flex;gap:6px;align-items:center">' +
+          payBtn +
+          '<button class="btn btn-outline btn-sm btn-icon" onclick="openEdit(\'' + p.id + '\')" title="تعديل">' +
+          '<i class="fa-solid fa-pen"></i>' +
+          '</button>' +
+          '</div>' +
+          '</td>' +
+          '</tr>'
+        );
+      }).join('');
     }
 
     async function markPaid(id, name) {
       var res = await API.payments.markPaid({ paymentId: id });
       if (res && res.success) {
         Toast.success('تم تسجيل دفع ' + name);
-        await load(); // ← await عشان يستنى التحديث
+        await load();
       } else {
         Toast.error((res && res.message) || 'حدث خطأ');
+      }
+    }
+
+    // ── Edit Modal ────────────────────────────────────────────
+    function openEdit(id) {
+      var p = null;
+      filtered.forEach(function (x) { if (x.id === id) p = x; });
+      if (!p) return;
+
+      editPayId = id;
+      document.getElementById('edit-student-name').textContent =
+        p.studentName + ' — ' + p.monthName + ' ' + p.year;
+      document.getElementById('edit-amount').value = p.amount;
+      document.getElementById('edit-status').value = p.isPaid ? 'true' : 'false';
+      document.getElementById('edit-note').value = p.notes || '';
+      document.getElementById('edit-overlay').classList.add('open');
+    }
+
+    function closeEdit() {
+      document.getElementById('edit-overlay').classList.remove('open');
+      editPayId = null;
+    }
+
+    async function saveEdit() {
+      if (!editPayId) return;
+
+      var btn = document.getElementById('edit-save-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      var isPaid = document.getElementById('edit-status').value === 'true';
+      var amount = parseFloat(document.getElementById('edit-amount').value);
+      var note = document.getElementById('edit-note').value;
+
+      // جرب update الأول
+      var res = await API.payments.update(editPayId, {
+        amount: amount,
+        isPaid: isPaid,
+        notes: note,
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ التعديل';
+
+      if (res && res.success) {
+        Toast.success('تم حفظ التعديل');
+        closeEdit();
+        await load();
+      } else {
+        // fallback — لو مفيش update endpoint استخدم markPaid
+        if (isPaid) {
+          var res2 = await API.payments.markPaid({ paymentId: editPayId });
+          if (res2 && res2.success) {
+            Toast.success('تم تسجيل الدفع');
+            closeEdit();
+            await load();
+            return;
+          }
+        }
+        Toast.error((res && res.message) || 'حدث خطأ — تأكد من وجود endpoint التعديل');
       }
     }
 
@@ -480,15 +603,10 @@
       var m = document.getElementById('f-m').value;
       var y = document.getElementById('f-y').value;
       var month = m ? parseInt(m) : new Date().getMonth() + 1;
-      var year = y ? parseInt(y) : 2024;
-
+      var year = y ? parseInt(y) : new Date().getFullYear();
       var res = await API.payments.generate(month, year);
-      if (res && res.success) {
-        Toast.success('تم توليد فواتير الشهر');
-        load();
-      } else {
-        Toast.error((res && res.message) || 'حدث خطأ');
-      }
+      if (res && res.success) { Toast.success('تم توليد فواتير الشهر'); load(); }
+      else Toast.error((res && res.message) || 'حدث خطأ');
     }
 
     function exportPay() {
